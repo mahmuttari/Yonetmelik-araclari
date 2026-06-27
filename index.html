@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Çelik Profil Seçim Aracı — TBDY 2018 / ÇYTHYE</title>
+<style>
+  :root{
+    --bg:#0f172a; --panel:#1e293b; --panel2:#273449; --line:#334155;
+    --text:#e2e8f0; --muted:#94a3b8; --accent:#38bdf8; --accent2:#0ea5e9;
+    --ok:#22c55e; --warn:#f59e0b; --bad:#ef4444; --chip:#0b3b52;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+       background:var(--bg);color:var(--text);font-size:14px;line-height:1.45}
+  header{background:linear-gradient(120deg,#0c4a6e,#0e7490);padding:18px 22px;
+         border-bottom:3px solid var(--accent)}
+  header h1{margin:0;font-size:20px;letter-spacing:.3px}
+  header p{margin:4px 0 0;color:#bae6fd;font-size:12.5px}
+  .wrap{max-width:1280px;margin:0 auto;padding:18px}
+  .tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+  .tab{padding:9px 15px;background:var(--panel);border:1px solid var(--line);
+       border-radius:8px;cursor:pointer;color:var(--muted);font-weight:600;font-size:13px;
+       user-select:none;transition:.15s}
+  .tab:hover{color:var(--text);border-color:var(--accent2)}
+  .tab.active{background:var(--accent2);color:#04293a;border-color:var(--accent)}
+  .view{display:none}
+  .view.active{display:block;animation:fade .25s}
+  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  .grid{display:grid;gap:16px}
+  .g2{grid-template-columns:1fr 1fr}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  @media(max-width:900px){.g2,.g3{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px}
+  .card h2{margin:0 0 12px;font-size:15px;color:var(--accent);
+           border-bottom:1px solid var(--line);padding-bottom:8px}
+  .card h3{margin:14px 0 8px;font-size:13.5px;color:#7dd3fc}
+  label{display:block;font-size:12px;color:var(--muted);margin:10px 0 4px}
+  input,select{width:100%;padding:9px 10px;background:var(--panel2);
+       border:1px solid var(--line);border-radius:8px;color:var(--text);font-size:13px}
+  input:focus,select:focus{outline:none;border-color:var(--accent)}
+  .row{display:flex;gap:10px}.row>*{flex:1}
+  button{cursor:pointer}
+  .btn{background:var(--accent2);color:#04293a;border:none;padding:11px 18px;
+       border-radius:9px;font-weight:700;font-size:14px}
+  .btn:hover{background:var(--accent)}
+  .btn.sec{background:var(--panel2);color:var(--text);border:1px solid var(--line)}
+  .btn.sec:hover{border-color:var(--accent)}
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th,td{padding:7px 8px;text-align:right;border-bottom:1px solid var(--line)}
+  th{color:var(--accent);font-weight:600;position:sticky;top:0;background:var(--panel)}
+  td:first-child,th:first-child{text-align:left}
+  tbody tr{cursor:pointer}
+  tbody tr:hover{background:var(--panel2)}
+  tbody tr.sel{background:#0b3b52;outline:1px solid var(--accent)}
+  .tblwrap{max-height:430px;overflow:auto;border:1px solid var(--line);border-radius:10px}
+  .chip{display:inline-block;background:var(--chip);color:#7dd3fc;padding:3px 9px;
+        border-radius:20px;font-size:11.5px;margin:2px 4px 2px 0}
+  .kv{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px dashed var(--line);font-size:12.5px}
+  .kv span:first-child{color:var(--muted)}
+  .kv b{color:var(--text)}
+  .badge{display:inline-block;padding:3px 10px;border-radius:6px;font-weight:700;font-size:11.5px}
+  .b-ok{background:rgba(34,197,94,.18);color:#4ade80}
+  .b-warn{background:rgba(245,158,11,.18);color:#fbbf24}
+  .b-bad{background:rgba(239,68,68,.18);color:#f87171}
+  .bar{height:18px;background:var(--panel2);border-radius:20px;overflow:hidden;border:1px solid var(--line)}
+  .bar i{display:block;height:100%;border-radius:20px;transition:width .4s}
+  .muted{color:var(--muted);font-size:12px}
+  .note{background:rgba(56,189,248,.08);border-left:3px solid var(--accent);
+        padding:10px 12px;border-radius:6px;font-size:12.5px;color:#bae6fd;margin:10px 0}
+  .res-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--line)}
+  .res-row .lbl{flex:0 0 200px;font-weight:600;font-size:13px}
+  .res-row .barwrap{flex:1}
+  .res-row .val{flex:0 0 130px;text-align:right;font-size:12.5px}
+  svg .ln{stroke:var(--accent);stroke-width:2;fill:rgba(56,189,248,.12)}
+  .small{font-size:11.5px}
+  .toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:end;margin-bottom:12px}
+  .toolbar>div{flex:1;min-width:140px}
+  .pill{font-size:11px;padding:2px 8px;border-radius:12px;background:var(--panel2);color:var(--muted);margin-left:6px}
+  .ref{font-size:11px;color:var(--muted);font-style:italic}
+  details{margin:8px 0;background:var(--panel2);border-radius:8px;padding:6px 10px}
+  summary{cursor:pointer;font-weight:600;color:#7dd3fc;font-size:12.5px}
+  details ul{margin:6px 0;padding-left:18px}
+  details li{font-size:12px;color:var(--muted);margin:3px 0}
+  .formula{font-family:"Consolas",monospace;background:#0b1220;padding:8px 10px;
+           border-radius:6px;font-size:12px;color:#a5f3fc;overflow-x:auto}
+  .flag{font-size:11px;color:var(--warn)}
+  footer{text-align:center;color:var(--muted);font-size:11.5px;padding:20px;border-top:1px solid var(--line);margin-top:20px}
+</style>
+</head>
+<body>
+<header>
+  <h1>🏗️ Çelik Profil Seçim ve Kontrol Aracı</h1>
+  <p>TBDY 2018 (Bölüm 9) &amp; ÇYTHYE 2018 — Çelik Yapıların Tasarım, Hesap ve Yapım Esasları · YDKT (LRFD)</p>
+</header>
+
+<div class="wrap">
+  <div class="tabs">
+    <div class="tab active" data-v="db">1 · Profil Veritabanı</div>
+    <div class="tab" data-v="mat">2 · Malzeme &amp; Eleman</div>
+    <div class="tab" data-v="duct">3 · Süneklik (TBDY Tablo 9.3)</div>
+    <div class="tab" data-v="design">4 · Tasarım Kontrolleri</div>
+    <div class="tab" data-v="results">5 · Sonuç Raporu</div>
+    <div class="tab" data-v="help">ℹ️ Bilgi</div>
+  </div>
+
+  <!-- ================= 1. VERITABANI ================= -->
+  <div class="view active" id="v-db">
+    <div class="card">
+      <h2>Profil Veritabanı</h2>
+      <div class="toolbar">
+        <div>
+          <label>Profil ailesi</label>
+          <select id="famFilter">
+            <option value="all">Tümü</option>
+            <option value="IPE">IPE</option>
+            <option value="HEA">HEA (HE-A)</option>
+            <option value="HEB">HEB (HE-B)</option>
+            <option value="HEM">HEM (HE-M)</option>
+            <option value="UPN">UPN (U)</option>
+            <option value="BOX">Kutu Profil (□)</option>
+            <option value="CHS">Boru / Dairesel (○)</option>
+          </select>
+        </div>
+        <div>
+          <label>Ara (örn. IPE 300)</label>
+          <input id="search" placeholder="profil adı...">
+        </div>
+        <div style="flex:0 0 auto">
+          <label>&nbsp;</label>
+          <span class="muted" id="dbCount"></span>
+        </div>
+      </div>
+      <div class="tblwrap">
+        <table id="dbTable">
+          <thead><tr>
+            <th>Profil</th><th>h<br><span class="small">mm</span></th>
+            <th>b<br><span class="small">mm</span></th><th>t<sub>w</sub><br><span class="small">mm</span></th>
+            <th>t<sub>f</sub><br><span class="small">mm</span></th>
+            <th>A<br><span class="small">cm²</span></th>
+            <th>G<br><span class="small">kg/m</span></th>
+            <th>I<sub>y</sub><br><span class="small">cm⁴</span></th>
+            <th>W<sub>el,y</sub><br><span class="small">cm³</span></th>
+            <th>W<sub>pl,y</sub><br><span class="small">cm³</span></th>
+            <th>i<sub>y</sub><br><span class="small">cm</span></th>
+            <th>I<sub>z</sub><br><span class="small">cm⁴</span></th>
+            <th>W<sub>pl,z</sub><br><span class="small">cm³</span></th>
+            <th>i<sub>z</sub><br><span class="small">cm</span></th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="note">Bir satıra tıklayarak profili seçin → seçilen profil tüm sekmelerde kullanılır. Eksen tanımı: <b>y-y güçlü (major) eksen</b>, <b>z-z zayıf (minor) eksen</b> (Eurocode konvansiyonu).</div>
+    </div>
+  </div>
+
+  <!-- ================= 2. MALZEME ================= -->
+  <div class="view" id="v-mat">
+    <div class="grid g2">
+      <div class="card">
+        <h2>Malzeme Seçimi</h2>
+        <label>Çelik sınıfı (TS EN 10025)</label>
+        <select id="steel">
+          <option value="S235">S235 — Fy=235, Fu=360 MPa</option>
+          <option value="S275">S275 — Fy=275, Fu=430 MPa</option>
+          <option value="S355" selected>S355 — Fy=355, Fu=510 MPa</option>
+          <option value="S420">S420 — Fy=420, Fu=520 MPa</option>
+          <option value="S460">S460 — Fy=460, Fu=540 MPa</option>
+        </select>
+        <div class="note small">Kalınlık t&gt;16 mm için Fy değerleri düşer; burada nominal (t≤16 mm) değerler kullanılır. Gerekiyorsa Fy/Fu değerlerini elle düzenleyin.</div>
+        <div class="row">
+          <div><label>F<sub>y</sub> — akma (MPa)</label><input id="Fy" type="number" value="355"></div>
+          <div><label>F<sub>u</sub> — çekme (MPa)</label><input id="Fu" type="number" value="510"></div>
+        </div>
+        <div class="row">
+          <div><label>E — elastisite (MPa)</label><input id="E" type="number" value="200000"></div>
+          <div><label>R<sub>y</sub> (beklenen akma çarpanı)</label><input id="Ry" type="number" step="0.05" value="1.10"></div>
+        </div>
+        <div class="note small">TBDY 2018: yapısal çelik için E = 2×10⁵ MPa. R<sub>y</sub> beklenen akma dayanımı çarpanı (kapasite tasarımı için) — S235/S355 için ~1.10.</div>
+      </div>
+      <div class="card">
+        <h2>Eleman Tanımı &amp; Süneklik Düzeyi</h2>
+        <label>Eleman tipi</label>
+        <select id="memberType">
+          <option value="beam">Kiriş (eğilme elemanı)</option>
+          <option value="column">Kolon (basınç + eğilme)</option>
+          <option value="brace">Çapraz (eksenel — merkezi çelik çapraz)</option>
+          <option value="tie">Çekme elemanı</option>
+        </select>
+        <label>Taşıyıcı sistem süneklik düzeyi (TBDY 2018)</label>
+        <select id="ductLevel">
+          <option value="high">Yüksek Süneklik Düzeyi (YSD / λ<sub>hd</sub>)</option>
+          <option value="moderate" selected>Sınırlı Süneklik Düzeyi (SSD / λ<sub>md</sub>)</option>
+          <option value="none">Süneklik gözetilmeyen (yalnız elastik enkesit sınıfı)</option>
+        </select>
+        <div class="note small">TBDY 2018 Tablo 4.1: süneklik düzeyi yüksek sistemlerde R büyür, fakat enkesit ve birleşim koşulları daha katıdır. Seçim, Sekme 3'teki enkesit kontrolünü belirler.</div>
+        <h3>Eleman boyu &amp; mesnetlenme</h3>
+        <div class="row">
+          <div><label>L — eleman boyu (m)</label><input id="L" type="number" step="0.1" value="4.0"></div>
+          <div><label>K — etkili boy çarpanı</label><input id="K" type="number" step="0.05" value="1.0"></div>
+        </div>
+        <div class="row">
+          <div><label>L<sub>b</sub> — yanal mesnetsiz boy (m)</label><input id="Lb" type="number" step="0.1" value="4.0"></div>
+          <div><label>C<sub>b</sub> — moment düzeltme</label><input id="Cb" type="number" step="0.05" value="1.0"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= 3. SUNEKLIK ================= -->
+  <div class="view" id="v-duct">
+    <div class="card">
+      <h2>Enkesit Süneklik Koşulları — TBDY 2018 Tablo 9.3</h2>
+      <p class="muted">Genişlik/kalınlık (b/t) oranları, seçilen süneklik düzeyine göre sınır değerlerle (λ<sub>hd</sub> / λ<sub>md</sub>) karşılaştırılır. Sınırlar AISC 341 ile uyumludur. Ek olarak TS EN 1993-1-1 elastik enkesit sınıfı (Sınıf 1–4) verilir.</p>
+      <div id="ductOut"></div>
+    </div>
+  </div>
+
+  <!-- ================= 4. TASARIM ================= -->
+  <div class="view" id="v-design">
+    <div class="grid g2">
+      <div class="card">
+        <h2>Tasarım İç Kuvvetleri (YDKT — LRFD)</h2>
+        <div class="note small">Yük kombinasyonlarından elde edilen <b>tasarım (artımlı yük)</b> iç kuvvetlerini girin. Çekme +, basınç − olarak girilebilir; mutlak değer kullanılır.</div>
+        <div class="row">
+          <div><label>N<sub>d</sub> — eksenel kuvvet (kN)</label><input id="Nd" type="number" value="500"></div>
+          <div>
+            <label>Eksenel tip</label>
+            <select id="axType"><option value="comp">Basınç</option><option value="tens">Çekme</option></select>
+          </div>
+        </div>
+        <div class="row">
+          <div><label>M<sub>y,d</sub> — güçlü eksen momenti (kNm)</label><input id="Myd" type="number" value="120"></div>
+          <div><label>M<sub>z,d</sub> — zayıf eksen momenti (kNm)</label><input id="Mzd" type="number" value="0"></div>
+        </div>
+        <div class="row">
+          <div><label>V<sub>d</sub> — kesme kuvveti (kN)</label><input id="Vd" type="number" value="80"></div>
+          <div><label>A<sub>net</sub>/A<sub>g</sub> — net alan oranı</label><input id="netRatio" type="number" step="0.05" value="1.0"></div>
+        </div>
+        <button class="btn" id="calcBtn" style="margin-top:14px;width:100%">▶ Tasarım Kontrolünü Çalıştır</button>
+      </div>
+      <div class="card">
+        <h2>Seçilen Profil Özeti</h2>
+        <div id="selSummary"><p class="muted">Henüz profil seçilmedi. Sekme 1'den bir profil seçin.</p></div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <h2>Kapasite Hesap Detayları</h2>
+      <div id="capDetail"><p class="muted">Hesap için yukarıdaki butonu kullanın.</p></div>
+    </div>
+  </div>
+
+  <!-- ================= 5. SONUCLAR ================= -->
+  <div class="view" id="v-results">
+    <div class="card">
+      <h2>Sonuç Raporu — Kullanım Oranları (D/C)</h2>
+      <div id="resultsOut"><p class="muted">Henüz hesap yapılmadı.</p></div>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <h2>Profil Seçim Asistanı</h2>
+      <p class="muted">Girilen iç kuvvetler ve malzeme için, seçili aileden tüm tasarım kontrollerini sağlayan <b>en hafif</b> profilleri sıralar.</p>
+      <div class="toolbar">
+        <div>
+          <label>Aday aile</label>
+          <select id="advisorFam">
+            <option value="IPE">IPE</option><option value="HEA">HEA</option>
+            <option value="HEB" selected>HEB</option><option value="HEM">HEM</option>
+          </select>
+        </div>
+        <div style="flex:0 0 auto"><label>&nbsp;</label>
+          <button class="btn sec" id="advisorBtn">🔍 Uygun Profilleri Bul</button></div>
+      </div>
+      <div id="advisorOut"></div>
+    </div>
+  </div>
+
+  <!-- ================= BILGI ================= -->
+  <div class="view" id="v-help">
+    <div class="card">
+      <h2>Yöntem ve Kapsam</h2>
+      <details open><summary>Hangi yönetmelikler kullanıldı?</summary>
+        <ul>
+          <li><b>TBDY 2018</b> — Türkiye Bina Deprem Yönetmeliği, Bölüm 9 "Çelik Bina Taşıyıcı Sistemlerinin Deprem Etkisi Altında Tasarımı". Enkesit süneklik koşulları (Tablo 9.3) ve süneklik düzeyleri.</li>
+          <li><b>ÇYTHYE 2018</b> — Çelik Yapıların Tasarım, Hesap ve Yapım Esaslarına Dair Yönetmelik. Eleman dayanımı için YDKT (Yük ve Dayanım Katsayıları ile Tasarım = LRFD) esasları (AISC 360 uyumlu).</li>
+          <li><b>TS EN 1993-1-1 (Eurocode 3)</b> — elastik enkesit sınıflandırması (Sınıf 1–4) referansı.</li>
+        </ul>
+      </details>
+      <details><summary>Hesaplanan kontroller</summary>
+        <ul>
+          <li>Çekme: akma (φ=0.90·Fy·Ag) ve net kesit kopması (φ=0.75·Fu·Ae)</li>
+          <li>Basınç: elastik burkulma F<sub>e</sub>=π²E/(KL/r)², F<sub>cr</sub> ve φ<sub>c</sub>=0.90</li>
+          <li>Eğilme: plastik moment M<sub>p</sub>=F<sub>y</sub>·W<sub>pl</sub>, yanal burulmalı burkulma (YTB/LTB) L<sub>p</sub>–L<sub>r</sub> geçişi, φ<sub>b</sub>=0.90</li>
+          <li>Kesme: V<sub>n</sub>=0.6·F<sub>y</sub>·A<sub>w</sub>·C<sub>v</sub></li>
+          <li>Bileşik etki: AISC H1-1 (eksenel + iki eksenli eğilme etkileşimi)</li>
+          <li>TBDY enkesit süneklik koşulları (λ<sub>hd</sub>/λ<sub>md</sub>) + EC3 enkesit sınıfı</li>
+        </ul>
+      </details>
+      <details><summary>Önemli uyarılar ⚠️</summary>
+        <ul>
+          <li>Bu araç ön tasarım / kontrol amaçlıdır; nihai proje hesabı yerine geçmez.</li>
+          <li>Kapasite tasarımı (kuvvetle şekildeğiştirme uyumu, birleşim tasarımı, panel bölgesi, sürekli yanal mesnet detayları) kapsam dışıdır.</li>
+          <li>Profil kesit özellikleri standart Avrupa tablolarından alınmıştır; üretici toleranslarını içermez.</li>
+          <li>Sonuçlar mühendislik kontrolü gerektirir. Sorumluluk kullanıcıya aittir.</li>
+        </ul>
+      </details>
+      <div class="note">Kaynak veriler: ArcelorMittal / standart EN profil tabloları, AISC 341-16 & 360-16, TS EN 1993-1-1.</div>
+    </div>
+  </div>
+
+  <footer>
+    Çelik Profil Seçim Aracı · TBDY 2018 / ÇYTHYE · Ön tasarım amaçlıdır — mühendislik kontrolü gereklidir.
+  </footer>
+</div>
+
+<script>
+/* ============================================================
+   PROFİL VERİTABANI
+   Alanlar: [ad, h, b, tw, tf, A(cm2), G(kg/m), Iy(cm4), Wely(cm3),
+             Wply(cm3), iy(cm), Iz(cm4), Welz(cm3), Wplz(cm3), iz(cm)]
+   Eksen: y-y güçlü, z-z zayıf (Eurocode)
+   ============================================================ */
+const DB = {
+IPE:[
+["IPE 80",80,46,3.8,5.2,7.64,6.0,80.1,20.0,23.2,3.24,8.49,3.69,5.82,1.05],
+["IPE 100",100,55,4.1,5.7,10.3,8.1,171,34.2,39.4,4.07,15.9,5.79,9.15,1.24],
+["IPE 120",120,64,4.4,6.3,13.2,10.4,318,53.0,60.7,4.90,27.7,8.65,13.6,1.45],
+["IPE 140",140,73,4.7,6.9,16.4,12.9,541,77.3,88.3,5.74,44.9,12.3,19.2,1.65],
+["IPE 160",160,82,5.0,7.4,20.1,15.8,869,109,124,6.58,68.3,16.7,26.1,1.84],
+["IPE 180",180,91,5.3,8.0,23.9,18.8,1317,146,166,7.42,101,22.2,34.6,2.05],
+["IPE 200",200,100,5.6,8.5,28.5,22.4,1943,194,221,8.26,142,28.5,44.6,2.24],
+["IPE 220",220,110,5.9,9.2,33.4,26.2,2772,252,285,9.11,205,37.3,58.1,2.48],
+["IPE 240",240,120,6.2,9.8,39.1,30.7,3892,324,367,9.97,284,47.3,73.9,2.69],
+["IPE 270",270,135,6.6,10.2,45.9,36.1,5790,429,484,11.2,420,62.2,97.0,3.02],
+["IPE 300",300,150,7.1,10.7,53.8,42.2,8356,557,628,12.5,604,80.5,125,3.35],
+["IPE 330",330,160,7.5,11.5,62.6,49.1,11770,713,804,13.7,788,98.5,154,3.55],
+["IPE 360",360,170,8.0,12.7,72.7,57.1,16270,904,1019,15.0,1043,123,191,3.79],
+["IPE 400",400,180,8.6,13.5,84.5,66.3,23130,1156,1307,16.5,1318,146,229,3.95],
+["IPE 450",450,190,9.4,14.6,98.8,77.6,33740,1500,1702,18.5,1676,176,276,4.12],
+["IPE 500",500,200,10.2,16.0,116,90.7,48200,1928,2194,20.4,2142,214,336,4.31],
+["IPE 550",550,210,11.1,17.2,134,106,67120,2441,2787,22.3,2668,254,401,4.45],
+["IPE 600",600,220,12.0,19.0,156,122,92080,3069,3512,24.3,3387,308,486,4.66]
+],
+HEA:[
+["HEA 100",96,100,5.0,8.0,21.2,16.7,349,72.8,83.0,4.06,134,26.8,41.1,2.51],
+["HEA 120",114,120,5.0,8.0,25.3,19.9,606,106,119,4.89,231,38.5,58.9,3.02],
+["HEA 140",133,140,5.5,8.5,31.4,24.7,1033,155,173,5.73,389,55.6,84.8,3.52],
+["HEA 160",152,160,6.0,9.0,38.8,30.4,1673,220,245,6.57,616,76.9,118,3.98],
+["HEA 180",171,180,6.0,9.5,45.3,35.5,2510,294,325,7.45,925,103,156,4.52],
+["HEA 200",190,200,6.5,10.0,53.8,42.3,3692,389,430,8.28,1336,134,204,4.98],
+["HEA 220",210,220,7.0,11.0,64.3,50.5,5410,515,568,9.17,1955,178,271,5.51],
+["HEA 240",230,240,7.5,12.0,76.8,60.3,7763,675,744,10.1,2769,231,352,6.00],
+["HEA 260",250,260,7.5,12.5,86.8,68.2,10450,836,920,11.0,3668,282,430,6.50],
+["HEA 280",270,280,8.0,13.0,97.3,76.4,13670,1013,1112,11.9,4763,340,518,7.00],
+["HEA 300",290,300,8.5,14.0,112,88.3,18260,1260,1383,12.7,6310,421,641,7.49],
+["HEA 320",310,300,9.0,15.5,124,97.6,22930,1479,1628,13.6,6985,466,710,7.49],
+["HEA 340",330,300,9.5,16.5,133,105,27690,1678,1850,14.4,7436,496,756,7.46],
+["HEA 360",350,300,10.0,17.5,143,112,33090,1891,2088,15.2,7887,526,802,7.43],
+["HEA 400",390,300,11.0,19.0,159,125,45070,2311,2562,16.8,8564,571,873,7.34],
+["HEA 450",440,300,11.5,21.0,178,140,63720,2896,3216,18.9,9465,631,966,7.29],
+["HEA 500",490,300,12.0,23.0,198,155,86970,3550,3949,21.0,10370,691,1059,7.24],
+["HEA 550",540,300,12.5,24.0,212,166,111900,4146,4622,23.0,10820,721,1107,7.15],
+["HEA 600",590,300,13.0,25.0,226,178,141200,4787,5350,25.0,11270,751,1156,7.05]
+],
+HEB:[
+["HEB 100",100,100,6.0,10.0,26.0,20.4,450,89.9,104,4.16,167,33.5,51.4,2.53],
+["HEB 120",120,120,6.5,11.0,34.0,26.7,864,144,165,5.04,318,52.9,80.9,3.06],
+["HEB 140",140,140,7.0,12.0,43.0,33.7,1509,216,245,5.93,550,78.5,119.8,3.58],
+["HEB 160",160,160,8.0,13.0,54.3,42.6,2492,311,354,6.78,889,111,170,4.05],
+["HEB 180",180,180,8.5,14.0,65.3,51.2,3831,426,481,7.66,1363,151,231,4.57],
+["HEB 200",200,200,9.0,15.0,78.1,61.3,5696,570,643,8.54,2003,200,306,5.07],
+["HEB 220",220,220,9.5,16.0,91.0,71.5,8091,736,827,9.43,2843,258,394,5.59],
+["HEB 240",240,240,10.0,17.0,106,83.2,11260,938,1053,10.3,3923,327,498,6.08],
+["HEB 260",260,260,10.0,17.5,118,93.0,14920,1148,1283,11.2,5135,395,602,6.58],
+["HEB 280",280,280,10.5,18.0,131,103,19270,1376,1534,12.1,6595,471,718,7.09],
+["HEB 300",300,300,11.0,19.0,149,117,25170,1678,1869,13.0,8563,571,870,7.58],
+["HEB 320",320,300,11.5,20.5,161,127,30820,1926,2149,13.8,9239,616,939,7.57],
+["HEB 340",340,300,12.0,21.5,171,134,36660,2156,2408,14.6,9690,646,986,7.53],
+["HEB 360",360,300,12.5,22.5,181,142,43190,2400,2683,15.5,10140,676,1032,7.49],
+["HEB 400",400,300,13.5,24.0,198,155,57680,2884,3232,17.1,10820,721,1104,7.40],
+["HEB 450",450,300,14.0,26.0,218,171,79890,3551,3982,19.1,11720,781,1198,7.33],
+["HEB 500",500,300,14.5,28.0,239,187,107200,4287,4815,21.2,12620,842,1292,7.27],
+["HEB 550",550,300,15.0,29.0,254,199,136700,4971,5591,23.2,13080,872,1341,7.17],
+["HEB 600",600,300,15.5,30.0,270,212,171000,5701,6425,25.2,13530,902,1391,7.08]
+],
+HEM:[
+["HEM 100",120,106,12.0,20.0,53.2,41.8,1143,190,236,4.63,399,75.3,116,2.74],
+["HEM 120",140,126,12.5,21.0,66.4,52.1,2018,288,350,5.51,703,112,171,3.25],
+["HEM 140",160,146,13.0,22.0,80.6,63.2,3291,411,494,6.39,1144,157,240,3.77],
+["HEM 160",180,166,14.0,23.0,97.1,76.2,5098,566,675,7.25,1759,212,325,4.26],
+["HEM 180",200,186,14.5,24.0,113,88.9,7483,748,883,8.13,2580,277,425,4.77],
+["HEM 200",220,206,15.0,25.0,131,103,10640,967,1135,9.00,3651,354,543,5.27],
+["HEM 220",240,226,15.5,26.0,149,117,14600,1217,1419,9.89,5012,444,679,5.79],
+["HEM 240",270,248,18.0,32.0,200,157,24290,1799,2117,11.0,8153,657,1006,6.39],
+["HEM 260",290,268,18.0,32.5,220,172,31310,2159,2524,11.9,10450,780,1192,6.90],
+["HEM 280",310,288,18.5,33.0,240,189,39550,2551,2966,12.8,13160,914,1397,7.40],
+["HEM 300",340,310,21.0,39.0,303,238,59200,3482,4078,14.0,19400,1252,1913,8.00],
+["HEM 320",359,309,21.0,40.0,312,245,68130,3796,4435,14.8,19710,1276,1951,7.95],
+["HEM 340",377,309,21.0,40.0,316,248,76370,4052,4718,15.6,19710,1276,1953,7.90],
+["HEM 360",395,308,21.0,40.0,319,250,84870,4297,4989,16.3,19520,1268,1942,7.83],
+["HEM 400",432,307,21.0,40.0,326,256,104100,4820,5571,17.9,19340,1260,1934,7.70]
+],
+UPN:[
+["UPN 80",80,45,6.0,8.0,11.0,8.64,106,26.5,31.8,3.10,19.4,6.36,12.1,1.33],
+["UPN 100",100,50,6.0,8.5,13.5,10.6,206,41.2,49.0,3.91,29.3,8.49,16.2,1.47],
+["UPN 120",120,55,7.0,9.0,17.0,13.4,364,60.7,72.6,4.62,43.2,11.1,21.2,1.59],
+["UPN 140",140,60,7.0,10.0,20.4,16.0,605,86.4,103,5.45,62.7,14.8,28.3,1.75],
+["UPN 160",160,65,7.5,10.5,24.0,18.8,925,116,138,6.21,85.3,18.3,35.2,1.89],
+["UPN 180",180,70,8.0,11.0,28.0,22.0,1350,150,179,6.95,114,22.4,42.9,2.02],
+["UPN 200",200,75,8.5,11.5,32.2,25.3,1910,191,228,7.70,148,27.0,51.8,2.14],
+["UPN 220",220,80,9.0,12.5,37.4,29.4,2690,245,292,8.48,197,33.6,64.1,2.30],
+["UPN 240",240,85,9.5,13.0,42.3,33.2,3600,300,358,9.22,248,39.6,75.7,2.42],
+["UPN 260",260,90,10.0,14.0,48.3,37.9,4820,371,442,9.99,317,47.7,91.6,2.56],
+["UPN 280",280,95,10.0,15.0,53.3,41.8,6280,448,532,10.9,399,57.2,109,2.74],
+["UPN 300",300,100,10.0,16.0,58.8,46.2,8030,535,632,11.7,495,67.8,130,2.90]
+],
+BOX:[
+["□ 100x100x4",100,100,4.0,4.0,15.0,11.8,226,45.3,53.9,3.88,226,45.3,53.9,3.88],
+["□ 120x120x5",120,120,5.0,5.0,22.7,17.8,498,82.9,99.3,4.68,498,82.9,99.3,4.68],
+["□ 140x140x5",140,140,5.0,5.0,26.7,21.0,810,116,138,5.51,810,116,138,5.51],
+["□ 150x150x6",150,150,6.0,6.0,33.5,26.4,1152,154,184,5.86,1152,154,184,5.86],
+["□ 160x160x6",160,160,6.0,6.0,35.9,28.2,1413,177,210,6.27,1413,177,210,6.27],
+["□ 180x180x8",180,180,8.0,8.0,53.0,41.6,2616,291,348,7.02,2616,291,348,7.02],
+["□ 200x200x8",200,200,8.0,8.0,59.4,46.6,3651,365,433,7.84,3651,365,433,7.84],
+["□ 200x200x10",200,200,10.0,10.0,73.0,57.4,4382,438,526,7.75,4382,438,526,7.75],
+["□ 250x250x10",250,250,10.0,10.0,93.0,73.1,8879,710,841,9.77,8879,710,841,9.77],
+["□ 300x300x10",300,300,10.0,10.0,113,88.9,15910,1061,1251,11.9,15910,1061,1251,11.9],
+["□ 300x300x12",300,300,12.0,12.0,134,105,18550,1237,1470,11.8,18550,1237,1470,11.8]
+],
+CHS:[
+["○ 88.9x4",88.9,88.9,4.0,4.0,10.7,8.38,96.3,21.7,28.9,3.00,96.3,21.7,28.9,3.00],
+["○ 114.3x4",114.3,114.3,4.0,4.0,13.9,10.9,211,36.9,48.7,3.90,211,36.9,48.7,3.90],
+["○ 139.7x5",139.7,139.7,5.0,5.0,21.2,16.6,481,68.8,90.8,4.77,481,68.8,90.8,4.77],
+["○ 168.3x6",168.3,168.3,6.0,6.0,30.6,24.0,1053,125,165,5.86,1053,125,165,5.86],
+["○ 219.1x6",219.1,219.1,6.0,6.0,40.2,31.5,2386,218,285,7.70,2386,218,285,7.70],
+["○ 244.5x8",244.5,244.5,8.0,8.0,59.4,46.7,4160,340,448,8.37,4160,340,448,8.37],
+["○ 273x8",273,273,8.0,8.0,66.6,52.3,5852,429,562,9.37,5852,429,562,9.37],
+["○ 323.9x8",323.9,323.9,8.0,8.0,79.4,62.3,9910,612,799,11.2,9910,612,799,11.2]
+]
+};
+
+const STEEL={S235:[235,360],S275:[275,430],S355:[355,510],S420:[420,520],S460:[460,540]};
+
+// state
+let SEL=null;       // seçili profil dizisi
+let SELFAM=null;
+function fields(p){return{name:p[0],h:p[1],b:p[2],tw:p[3],tf:p[4],A:p[5],G:p[6],
+  Iy:p[7],Wely:p[8],Wply:p[9],iy:p[10],Iz:p[11],Welz:p[12],Wplz:p[13],iz:p[14]};}
+function isI(fam){return fam==='IPE'||fam==='HEA'||fam==='HEB'||fam==='HEM';}
+
+/* -------- Sekme yönetimi -------- */
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
+  t.classList.add('active');
+  document.getElementById('v-'+t.dataset.v).classList.add('active');
+});
+
+/* -------- Malzeme seçimi -------- */
+document.getElementById('steel').onchange=e=>{
+  const[fy,fu]=STEEL[e.target.value];
+  document.getElementById('Fy').value=fy;document.getElementById('Fu').value=fu;
+  document.getElementById('Ry').value=(e.target.value==='S235'||e.target.value==='S355')?1.10:1.20;
+};
+
+/* -------- Veritabanı tablosu -------- */
+function renderDB(){
+  const fam=document.getElementById('famFilter').value;
+  const q=document.getElementById('search').value.toLowerCase().trim();
+  const tb=document.querySelector('#dbTable tbody');tb.innerHTML='';
+  let count=0;
+  const fams=fam==='all'?Object.keys(DB):[fam];
+  fams.forEach(f=>{
+    DB[f].forEach(p=>{
+      if(q && !p[0].toLowerCase().includes(q))return;
+      count++;
+      const tr=document.createElement('tr');
+      if(SEL && SEL[0]===p[0])tr.classList.add('sel');
+      tr.innerHTML=`<td>${p[0]}</td><td>${p[1]}</td><td>${p[2]}</td><td>${p[3]}</td>
+        <td>${p[4]}</td><td>${p[5]}</td><td>${p[6]}</td><td>${p[7]}</td><td>${p[8]}</td>
+        <td>${p[9]}</td><td>${p[10]}</td><td>${p[11]}</td><td>${p[13]}</td><td>${p[14]}</td>`;
+      tr.onclick=()=>{SEL=p;SELFAM=f;renderDB();updateSel();renderDuct();};
+      tb.appendChild(tr);
+    });
+  });
+  document.getElementById('dbCount').textContent=count+' profil';
+}
+document.getElementById('famFilter').onchange=renderDB;
+document.getElementById('search').oninput=renderDB;
+
+/* -------- Profil çizimi (SVG) -------- */
+function profileSVG(p,fam){
+  const f=fields(p);const W=160,H=160,pad=20;
+  const sc=Math.min((W-2*pad)/Math.max(f.b,f.h),(H-2*pad)/Math.max(f.b,f.h));
+  const bb=f.b*sc,hh=f.h*sc,tw=Math.max(f.tw*sc,1.2),tf=Math.max(f.tf*sc,1.2);
+  const cx=W/2,cy=H/2;
+  if(isI(fam)){
+    const x0=cx-bb/2,y0=cy-hh/2;
+    const pts=[
+      [x0,y0],[x0+bb,y0],[x0+bb,y0+tf],[cx+tw/2,y0+tf],[cx+tw/2,y0+hh-tf],
+      [x0+bb,y0+hh-tf],[x0+bb,y0+hh],[x0,y0+hh],[x0,y0+hh-tf],[cx-tw/2,y0+hh-tf],
+      [cx-tw/2,y0+tf],[x0,y0+tf]
+    ].map(a=>a.join(',')).join(' ');
+    return `<svg width="${W}" height="${H}"><polygon class="ln" points="${pts}"/></svg>`;
+  }
+  if(fam==='BOX'){
+    const x0=cx-bb/2,y0=cy-hh/2;
+    return `<svg width="${W}" height="${H}"><rect class="ln" x="${x0}" y="${y0}" width="${bb}" height="${hh}"/>
+      <rect x="${x0+tw}" y="${y0+tf}" width="${bb-2*tw}" height="${hh-2*tf}" fill="var(--panel)" stroke="var(--accent)" stroke-width="1"/></svg>`;
+  }
+  if(fam==='CHS'){
+    const r=hh/2;
+    return `<svg width="${W}" height="${H}"><circle class="ln" cx="${cx}" cy="${cy}" r="${r}"/>
+      <circle cx="${cx}" cy="${cy}" r="${r-tw}" fill="var(--panel)" stroke="var(--accent)" stroke-width="1"/></svg>`;
+  }
+  if(fam==='UPN'){
+    const x0=cx-bb/2,y0=cy-hh/2;
+    const pts=[[x0,y0],[x0+bb,y0],[x0+bb,y0+tf],[x0+tw,y0+tf],[x0+tw,y0+hh-tf],
+      [x0+bb,y0+hh-tf],[x0+bb,y0+hh],[x0,y0+hh]].map(a=>a.join(',')).join(' ');
+    return `<svg width="${W}" height="${H}"><polygon class="ln" points="${pts}"/></svg>`;
+  }
+  return '';
+}
+
+/* -------- Seçili profil özeti -------- */
+function updateSel(){
+  const box=document.getElementById('selSummary');
+  if(!SEL){box.innerHTML='<p class="muted">Henüz profil seçilmedi.</p>';return;}
+  const f=fields(SEL);
+  box.innerHTML=`<div style="display:flex;gap:14px;align-items:center">
+    <div>${profileSVG(SEL,SELFAM)}</div>
+    <div style="flex:1">
+      <div style="font-size:17px;font-weight:700;color:var(--accent)">${f.name}</div>
+      <div class="chip">${SELFAM}</div><div class="chip">${f.G} kg/m</div>
+      <div class="kv"><span>A — alan</span><b>${f.A} cm²</b></div>
+      <div class="kv"><span>h × b</span><b>${f.h} × ${f.b} mm</b></div>
+      <div class="kv"><span>t<sub>w</sub> / t<sub>f</sub></span><b>${f.tw} / ${f.tf} mm</b></div>
+      <div class="kv"><span>W<sub>pl,y</sub> / W<sub>pl,z</sub></span><b>${f.Wply} / ${f.Wplz} cm³</b></div>
+      <div class="kv"><span>i<sub>y</sub> / i<sub>z</sub></span><b>${f.iy} / ${f.iz} cm</b></div>
+    </div></div>`;
+}
+
+/* ============================================================
+   SÜNEKLİK / ENKESİT KONTROLÜ (TBDY 2018 Tablo 9.3 + EC3)
+   ============================================================ */
+function renderDuct(){
+  const out=document.getElementById('ductOut');
+  if(!SEL){out.innerHTML='<p class="muted">Önce Sekme 1\'den bir profil seçin.</p>';return;}
+  const f=fields(SEL);
+  const Fy=+document.getElementById('Fy').value;
+  const E=+document.getElementById('E').value;
+  const lvl=document.getElementById('ductLevel').value;
+  const sq=Math.sqrt(E/Fy);
+  const eps=Math.sqrt(235/Fy);
+  let rows='';
+
+  function lim(label,ratio,hd,md,kind){
+    let limit, limLabel;
+    if(lvl==='high'){limit=hd;limLabel='λ_hd';}
+    else if(lvl==='moderate'){limit=md;limLabel='λ_md';}
+    else{limit=null;}
+    let badge;
+    if(limit===null){badge='<span class="badge b-warn">—</span>';}
+    else if(ratio<=limit){badge='<span class="badge b-ok">UYGUN</span>';}
+    else badge='<span class="badge b-bad">AŞIM</span>';
+    return `<tr><td style="text-align:left">${label}</td>
+      <td>${ratio.toFixed(2)}</td>
+      <td>${hd.toFixed(2)}</td><td>${md.toFixed(2)}</td>
+      <td>${limit===null?'—':limit.toFixed(2)+' ('+limLabel+')'}</td>
+      <td style="text-align:center">${badge}</td></tr>`;
+  }
+
+  if(isI(f.name?'':'')||isI(SELFAM)){
+    // Başlık (flanş) — konsol (unstiffened): b/2tf
+    const flR=(f.b/2)/f.tf;
+    rows+=lim('Başlık b/(2·t<sub>f</sub>) — konsol', flR, 0.30*sq, 0.38*sq);
+    // Gövde (web) — eğilmede (stiffened): hw/tw  (hw ≈ h - 2tf, yaklaşık h-2.5tf köşe ile)
+    const hw=f.h-2*f.tf;
+    const wR=hw/f.tw;
+    rows+=lim('Gövde h<sub>w</sub>/t<sub>w</sub> — eğilme', wR, 2.45*sq, 3.76*sq);
+  } else if(SELFAM==='BOX'){
+    const hw=f.h-2*f.tf;
+    const wallR=hw/f.tw;
+    rows+=lim('Kutu cidar b/t — eksenel basınç', wallR, 1.40*sq, 1.40*sq);
+    rows+=lim('Kutu cidar b/t — eğilme', wallR, 2.42*sq, 2.42*sq);
+  } else if(SELFAM==='CHS'){
+    const D_t=f.h/f.tw;
+    rows+=lim('Boru D/t — eğilme/basınç', D_t, 0.044*E/Fy, 0.07*E/Fy);
+  } else if(SELFAM==='UPN'){
+    const flR=f.b/f.tf;
+    rows+=lim('U başlık b/t<sub>f</sub>', flR, 0.30*sq, 0.38*sq);
+    const wR=(f.h-2*f.tf)/f.tw;
+    rows+=lim('U gövde h<sub>w</sub>/t<sub>w</sub>', wR, 2.45*sq, 3.76*sq);
+  }
+
+  // EC3 enkesit sınıfı (I kesit, eğilme)
+  let ec3='';
+  if(isI(SELFAM)){
+    const cf=(f.b/2 - f.tw/2)/f.tf; // outstand flange
+    const cw=(f.h-2*f.tf)/f.tw;     // web
+    let flCls=cf<=9*eps?1:cf<=10*eps?2:cf<=14*eps?3:4;
+    let wCls=cw<=72*eps?1:cw<=83*eps?2:cw<=124*eps?3:4; // web in bending
+    const cls=Math.max(flCls,wCls);
+    ec3=`<div class="note small">
+      <b>TS EN 1993-1-1 elastik enkesit sınıfı (ε=${eps.toFixed(3)}):</b><br>
+      Başlık c/t<sub>f</sub> = ${cf.toFixed(2)} → Sınıf ${flCls} ·
+      Gövde c/t<sub>w</sub> = ${cw.toFixed(2)} → Sınıf ${wCls} ·
+      <b>Belirleyici: Sınıf ${cls}</b> ${cls<=2?'(plastik kapasite kullanılabilir)':cls===3?'(elastik kapasite)':'(yerel burkulma — etkin kesit gerekir)'}</div>`;
+  }
+
+  out.innerHTML=`
+    <div class="note small">Süneklik düzeyi: <b>${lvl==='high'?'Yüksek (λ_hd)':lvl==='moderate'?'Sınırlı (λ_md)':'Gözetilmiyor'}</b> ·
+    Profil: <b>${f.name}</b> · F<sub>y</sub>=${Fy} MPa · √(E/F<sub>y</sub>)=${sq.toFixed(2)}</div>
+    <div class="tblwrap" style="max-height:none">
+    <table><thead><tr>
+      <th style="text-align:left">Enkesit parçası / oran</th><th>Mevcut</th>
+      <th>λ<sub>hd</sub></th><th>λ<sub>md</sub></th><th>Uygulanan sınır</th><th style="text-align:center">Durum</th>
+    </tr></thead><tbody>${rows}</tbody></table></div>
+    ${ec3}
+    <details><summary>Sınır formülleri (TBDY 2018 Tablo 9.3 / AISC 341)</summary>
+      <ul>
+        <li>I-kesit başlık (konsol): λ<sub>hd</sub>=0.30√(E/F<sub>y</sub>), λ<sub>md</sub>=0.38√(E/F<sub>y</sub>)</li>
+        <li>I-kesit gövde (eğilme): λ<sub>hd</sub>=2.45√(E/F<sub>y</sub>), λ<sub>md</sub>=3.76√(E/F<sub>y</sub>)</li>
+        <li>HSS dikdörtgen cidar: λ=1.40√(E/F<sub>y</sub>) (basınç), 2.42√(E/F<sub>y</sub>) (eğilme)</li>
+        <li>Dairesel boru D/t: λ<sub>hd</sub>=0.044E/F<sub>y</sub>, λ<sub>md</sub>=0.07E/F<sub>y</sub></li>
+      </ul></details>`;
+}
+['Fy','E','ductLevel','ductLevel'].forEach(id=>{
+  const el=document.getElementById(id);if(el)el.addEventListener('change',renderDuct);
+});
+
+/* ============================================================
+   TASARIM KONTROLLERİ (ÇYTHYE YDKT / AISC 360)
+   ============================================================ */
+function calc(){
+  if(!SEL){alert('Önce bir profil seçin (Sekme 1).');return;}
+  const f=fields(SEL);
+  const Fy=+document.getElementById('Fy').value, Fu=+document.getElementById('Fu').value;
+  const E=+document.getElementById('E').value;
+  const L=+document.getElementById('L').value*1000;   // mm
+  const K=+document.getElementById('K').value;
+  const Lb=+document.getElementById('Lb').value*1000; // mm
+  const Cb=+document.getElementById('Cb').value;
+  const Nd=Math.abs(+document.getElementById('Nd').value)*1000; // N
+  const axType=document.getElementById('axType').value;
+  const Myd=Math.abs(+document.getElementById('Myd').value)*1e6; // Nmm
+  const Mzd=Math.abs(+document.getElementById('Mzd').value)*1e6;
+  const Vd=Math.abs(+document.getElementById('Vd').value)*1000;  // N
+  const netRatio=+document.getElementById('netRatio').value;
+
+  // Birimler: alan cm2->mm2, atalet cm4->mm4, mukavemet cm3->mm3, yarıçap cm->mm
+  const A=f.A*100, Iy=f.Iy*1e4, Iz=f.Iz*1e4;
+  const Wely=f.Wely*1e3, Wply=f.Wply*1e3, Welz=f.Welz*1e3, Wplz=f.Wplz*1e3;
+  const iy=f.iy*10, iz=f.iz*10;
+  const Aw=f.h*f.tw; // gövde alanı (kesme)
+
+  const res={};
+
+  /* --- ÇEKME --- */
+  if(axType==='tens'){
+    const phiY=0.90, phiR=0.75;
+    const Nyield=phiY*Fy*A;
+    const Ae=A*netRatio;
+    const Nrupt=phiR*Fu*Ae;
+    const Nc=Math.min(Nyield,Nrupt);
+    res.tension={Nyield,Nrupt,Nc,demand:Nd,dc:Nd/Nc,gov:Nyield<Nrupt?'akma':'kopma'};
+  }
+
+  /* --- BASINÇ --- */
+  let Ncomp=null;
+  if(axType==='comp'){
+    const phiC=0.90;
+    const rmin=Math.min(iy,iz);
+    const lam=K*L/rmin;           // KL/r
+    const Fe=Math.PI*Math.PI*E/(lam*lam);
+    const lamLim=4.71*Math.sqrt(E/Fy);
+    let Fcr;
+    if(lam<=lamLim){Fcr=Math.pow(0.658,Fy/Fe)*Fy;}
+    else{Fcr=0.877*Fe;}
+    Ncomp=phiC*Fcr*A;
+    res.comp={lam,Fe,Fcr,Nc:Ncomp,demand:Nd,dc:Nd/Ncomp,
+      mode:lam<=lamLim?'elastik olmayan (inelastik)':'elastik',rmin};
+  }
+
+  /* --- EĞİLME (güçlü eksen, YTB/LTB) --- */
+  function flexure(Wpl,Wel,iaxis,sameAxis){
+    const phiB=0.90;
+    const Mp=Fy*Wpl;
+    // Yanal burulmalı burkulma yalnız güçlü eksende belirleyici (I kesit)
+    if(!sameAxis){ // zayıf eksen — LTB yok
+      return {phiMn:phiB*Mp,Mp,Mn:Mp,mode:'plastik (zayıf eksen)'};
+    }
+    const ry=iz; // zayıf eksen yarıçapı
+    const Lp=1.76*ry*Math.sqrt(E/Fy);
+    // rts ≈ √(√(Iz·Cw)/Wel) — yaklaşık: rts ≈ iz·1.0 ; basitleştirme
+    const rts=Math.sqrt(Math.sqrt(Iz*( (f.h-f.tf)*(f.h-f.tf)*Iz/4 ))/Wel);
+    const ho=f.h-f.tf; // başlık merkezleri arası
+    const J=( (2*f.b*Math.pow(f.tf,3))+( (f.h-f.tf)*Math.pow(f.tw,3)) )/3; // burulma sabiti yaklaşık
+    const c=1.0;
+    const Lr=1.95*rts*(E/(0.7*Fy))*Math.sqrt( (J*c/(Wel*ho)) +
+      Math.sqrt( Math.pow(J*c/(Wel*ho),2) + 6.76*Math.pow(0.7*Fy/E,2) ) );
+    let Mn,mode;
+    if(Lb<=Lp){Mn=Mp;mode='plastik (L_b ≤ L_p)';}
+    else if(Lb<=Lr){
+      Mn=Cb*(Mp-(Mp-0.7*Fy*Wel)*(Lb-Lp)/(Lr-Lp));
+      Mn=Math.min(Mn,Mp);mode='inelastik YTB (L_p < L_b ≤ L_r)';
+    } else {
+      const Fcr=(Cb*Math.PI*Math.PI*E/Math.pow(Lb/rts,2))*
+        Math.sqrt(1+0.078*(J*c/(Wel*ho))*Math.pow(Lb/rts,2));
+      Mn=Math.min(Fcr*Wel,Mp);mode='elastik YTB (L_b > L_r)';
+    }
+    return {phiMn:phiB*Mn,Mp,Mn,mode,Lp,Lr};
+  }
+  const fly=flexure(Wply,Wely,iy,true);
+  const flz=(Mzd>0)?flexure(Wplz,Welz,iz,false):flexure(Wplz,Welz,iz,false);
+  res.flexY={...fly,demand:Myd,dc:Myd/fly.phiMn};
+  res.flexZ={...flz,demand:Mzd,dc:Mzd/flz.phiMn};
+
+  /* --- KESME --- */
+  {
+    const hw=f.h-2*f.tf;
+    const limV=2.24*Math.sqrt(E/Fy);
+    let phiV,Cv;
+    if(hw/f.tw<=limV){phiV=1.0;Cv=1.0;}
+    else{phiV=0.90;Cv=1.0;} // narin gövde için Cv<1 olabilir; basitleştirme
+    const Vn=0.6*Fy*Aw*Cv;
+    res.shear={phiVn:phiV*Vn,Vn,demand:Vd,dc:Vd/(phiV*Vn),phiV};
+  }
+
+  /* --- BİLEŞİK ETKİ (AISC H1) --- */
+  {
+    const Nc=(axType==='comp')?res.comp.Nc:(res.tension?res.tension.Nc:1e12);
+    const Pr=Nd, Pc=Nc;
+    const ratio=Pr/Pc;
+    const McY=res.flexY.phiMn, McZ=res.flexZ.phiMn;
+    let ic;
+    if(ratio>=0.2){
+      ic=ratio + (8/9)*(Myd/McY + Mzd/McZ);
+      res.combined={eq:'H1-1a (Pr/Pc ≥ 0.2)',ic,ratio};
+    } else {
+      ic=ratio/2 + (Myd/McY + Mzd/McZ);
+      res.combined={eq:'H1-1b (Pr/Pc < 0.2)',ic,ratio};
+    }
+  }
+
+  window.LASTRES=res;
+  renderCapDetail(res,f);
+  renderResults(res);
+  // sonuç sekmesine geç
+  document.querySelector('.tab[data-v="results"]').click();
+}
+document.getElementById('calcBtn').onclick=calc;
+
+/* -------- Kapasite detayları -------- */
+function renderCapDetail(res,f){
+  const box=document.getElementById('capDetail');
+  let h='';
+  if(res.tension){const t=res.tension;
+    h+=`<h3>Çekme Dayanımı (ÇYTHYE)</h3>
+    <div class="formula">φ·N<sub>akma</sub> = 0.90·F<sub>y</sub>·A<sub>g</sub> = ${(t.Nyield/1000).toFixed(0)} kN<br>
+    φ·N<sub>kopma</sub> = 0.75·F<sub>u</sub>·A<sub>e</sub> = ${(t.Nrupt/1000).toFixed(0)} kN<br>
+    Belirleyici (${t.gov}): φN<sub>t</sub> = ${(t.Nc/1000).toFixed(0)} kN</div>`;
+  }
+  if(res.comp){const c=res.comp;
+    h+=`<h3>Basınç Dayanımı (Burkulma)</h3>
+    <div class="formula">KL/r = ${c.lam.toFixed(1)} (r<sub>min</sub>=${(c.rmin/10).toFixed(2)} cm) · mod: ${c.mode}<br>
+    F<sub>e</sub> = π²E/(KL/r)² = ${c.Fe.toFixed(0)} MPa<br>
+    F<sub>cr</sub> = ${c.Fcr.toFixed(0)} MPa<br>
+    φ<sub>c</sub>·N<sub>c</sub> = 0.90·F<sub>cr</sub>·A<sub>g</sub> = ${(c.Nc/1000).toFixed(0)} kN</div>`;
+  }
+  const fy=res.flexY;
+  h+=`<h3>Eğilme — Güçlü Eksen (y)</h3>
+    <div class="formula">M<sub>p</sub> = F<sub>y</sub>·W<sub>pl,y</sub> = ${(fy.Mp/1e6).toFixed(1)} kNm · mod: ${fy.mode}<br>
+    ${fy.Lp?'L<sub>p</sub> = '+(fy.Lp/1000).toFixed(2)+' m · L<sub>r</sub> = '+(fy.Lr/1000).toFixed(2)+' m<br>':''}
+    φ<sub>b</sub>·M<sub>n,y</sub> = ${(fy.phiMn/1e6).toFixed(1)} kNm</div>`;
+  if(res.flexZ.demand>0){const fz=res.flexZ;
+    h+=`<h3>Eğilme — Zayıf Eksen (z)</h3>
+    <div class="formula">M<sub>p,z</sub> = F<sub>y</sub>·W<sub>pl,z</sub> = ${(fz.Mp/1e6).toFixed(1)} kNm<br>
+    φ<sub>b</sub>·M<sub>n,z</sub> = ${(fz.phiMn/1e6).toFixed(1)} kNm</div>`;
+  }
+  const s=res.shear;
+  h+=`<h3>Kesme Dayanımı</h3>
+    <div class="formula">φ<sub>v</sub> = ${s.phiV.toFixed(2)} · V<sub>n</sub> = 0.6·F<sub>y</sub>·A<sub>w</sub><br>
+    φ<sub>v</sub>·V<sub>n</sub> = ${(s.phiVn/1000).toFixed(0)} kN</div>`;
+  const cb=res.combined;
+  h+=`<h3>Bileşik Etki — Etkileşim (AISC H1)</h3>
+    <div class="formula">${cb.eq} · P<sub>r</sub>/P<sub>c</sub> = ${cb.ratio.toFixed(3)}<br>
+    Etkileşim oranı = ${cb.ic.toFixed(3)} ${cb.ic<=1?'≤ 1.0 ✓':'> 1.0 ✗'}</div>`;
+  box.innerHTML=h;
+}
+
+/* -------- Sonuç raporu (D/C barları) -------- */
+function bar(dc){
+  const pct=Math.min(dc*100,100);
+  const col=dc<=0.85?'var(--ok)':dc<=1.0?'var(--warn)':'var(--bad)';
+  return `<div class="bar"><i style="width:${pct}%;background:${col}"></i></div>`;
+}
+function badge(dc){
+  return dc<=1.0?`<span class="badge b-ok">UYGUN</span>`:`<span class="badge b-bad">YETERSİZ</span>`;
+}
+function row(label,dc,detail){
+  return `<div class="res-row">
+    <div class="lbl">${label}</div>
+    <div class="barwrap">${bar(dc)}</div>
+    <div class="val"><b>D/C=${dc.toFixed(2)}</b> ${badge(dc)}</div>
+  </div><div class="muted small" style="margin:-6px 0 6px 200px">${detail||''}</div>`;
+}
+function renderResults(res){
+  const box=document.getElementById('resultsOut');
+  let h='';let maxDC=0;
+  if(res.tension){h+=row('Çekme',res.tension.dc,
+    `φN<sub>t</sub>=${(res.tension.Nc/1000).toFixed(0)} kN · belirleyici: ${res.tension.gov}`);
+    maxDC=Math.max(maxDC,res.tension.dc);}
+  if(res.comp){h+=row('Basınç (burkulma)',res.comp.dc,
+    `φN<sub>c</sub>=${(res.comp.Nc/1000).toFixed(0)} kN · KL/r=${res.comp.lam.toFixed(0)}`);
+    maxDC=Math.max(maxDC,res.comp.dc);}
+  h+=row('Eğilme — güçlü eksen (M<sub>y</sub>)',res.flexY.dc,
+    `φM<sub>n,y</sub>=${(res.flexY.phiMn/1e6).toFixed(1)} kNm · ${res.flexY.mode}`);
+  maxDC=Math.max(maxDC,res.flexY.dc);
+  if(res.flexZ.demand>0){h+=row('Eğilme — zayıf eksen (M<sub>z</sub>)',res.flexZ.dc,
+    `φM<sub>n,z</sub>=${(res.flexZ.phiMn/1e6).toFixed(1)} kNm`);
+    maxDC=Math.max(maxDC,res.flexZ.dc);}
+  h+=row('Kesme',res.shear.dc,`φV<sub>n</sub>=${(res.shear.phiVn/1000).toFixed(0)} kN`);
+  maxDC=Math.max(maxDC,res.shear.dc);
+  h+=row('Bileşik etki (eksenel+eğilme)',res.combined.ic,res.combined.eq);
+  maxDC=Math.max(maxDC,res.combined.ic);
+
+  const overall=maxDC<=1.0;
+  h=`<div class="note" style="border-left-color:${overall?'var(--ok)':'var(--bad)'}">
+      <b style="font-size:15px">Genel Sonuç: ${overall?'✓ PROFİL YETERLİ':'✗ PROFİL YETERSİZ'}</b><br>
+      En yüksek kullanım oranı (D/C) = <b>${maxDC.toFixed(2)}</b>
+      ${overall?`· ${((1-maxDC)*100).toFixed(0)}% rezerv`:'· kesit büyütülmeli'}</div>`+h;
+  box.innerHTML=h;
+}
+
+/* ============================================================
+   PROFİL SEÇİM ASİSTANI
+   ============================================================ */
+function runAdvisor(){
+  const fam=document.getElementById('advisorFam').value;
+  const out=document.getElementById('advisorOut');
+  const Fy=+document.getElementById('Fy').value, Fu=+document.getElementById('Fu').value;
+  const E=+document.getElementById('E').value;
+  const L=+document.getElementById('L').value*1000, K=+document.getElementById('K').value;
+  const Lb=+document.getElementById('Lb').value*1000, Cb=+document.getElementById('Cb').value;
+  const Nd=Math.abs(+document.getElementById('Nd').value)*1000;
+  const axType=document.getElementById('axType').value;
+  const Myd=Math.abs(+document.getElementById('Myd').value)*1e6;
+  const Mzd=Math.abs(+document.getElementById('Mzd').value)*1e6;
+  const Vd=Math.abs(+document.getElementById('Vd').value)*1000;
+  const netRatio=+document.getElementById('netRatio').value;
+
+  const list=[];
+  DB[fam].forEach(p=>{
+    const f=fields(p);
+    const A=f.A*100,Iy=f.Iy*1e4,Iz=f.Iz*1e4;
+    const Wply=f.Wply*1e3,Wely=f.Wely*1e3,Wplz=f.Wplz*1e3,Welz=f.Welz*1e3;
+    const iy=f.iy*10,iz=f.iz*10,Aw=f.h*f.tw;
+    // basit kapasiteler
+    let Nc=1e12;
+    if(axType==='comp'){
+      const rmin=Math.min(iy,iz),lam=K*L/rmin,Fe=Math.PI*Math.PI*E/(lam*lam);
+      const Fcr=lam<=4.71*Math.sqrt(E/Fy)?Math.pow(0.658,Fy/Fe)*Fy:0.877*Fe;
+      Nc=0.90*Fcr*A;
+    } else {Nc=Math.min(0.90*Fy*A,0.75*Fu*A*netRatio);}
+    // eğilme güçlü (basit LTB)
+    const Mp=Fy*Wply,ry=iz,Lp=1.76*ry*Math.sqrt(E/Fy);
+    const rts=iz; const ho=f.h-f.tf;
+    const J=((2*f.b*Math.pow(f.tf,3))+((f.h-f.tf)*Math.pow(f.tw,3)))/3;
+    const Lr=1.95*rts*(E/(0.7*Fy))*Math.sqrt((J/(Wely*ho))+Math.sqrt(Math.pow(J/(Wely*ho),2)+6.76*Math.pow(0.7*Fy/E,2)));
+    let Mn;
+    if(Lb<=Lp)Mn=Mp;
+    else if(Lb<=Lr)Mn=Math.min(Cb*(Mp-(Mp-0.7*Fy*Wely)*(Lb-Lp)/(Lr-Lp)),Mp);
+    else{const Fcr=(Cb*Math.PI*Math.PI*E/Math.pow(Lb/rts,2))*Math.sqrt(1+0.078*(J/(Wely*ho))*Math.pow(Lb/rts,2));Mn=Math.min(Fcr*Wely,Mp);}
+    const McY=0.90*Mn, McZ=0.90*Fy*Wplz;
+    const Vn=0.6*Fy*Aw;
+    // D/C
+    const ratio=Nd/Nc;
+    let ic = ratio>=0.2 ? ratio+(8/9)*(Myd/McY+Mzd/McZ) : ratio/2+(Myd/McY+Mzd/McZ);
+    const dcV=Vd/(0.90*Vn);
+    const maxDC=Math.max(ic,dcV);
+    list.push({name:f.name,G:f.G,maxDC,ic,dcV,ok:maxDC<=1.0});
+  });
+  const ok=list.filter(x=>x.ok).sort((a,b)=>a.G-b.G);
+  const best=ok[0];
+  let rows=list.sort((a,b)=>a.G-b.G).map(x=>`<tr class="${x.ok?'':''}" ${best&&x.name===best.name?'style="outline:1px solid var(--accent)"':''}>
+    <td style="text-align:left">${x.name} ${best&&x.name===best.name?'⭐':''}</td>
+    <td>${x.G}</td><td>${x.maxDC.toFixed(2)}</td>
+    <td style="text-align:center">${x.ok?'<span class="badge b-ok">UYGUN</span>':'<span class="badge b-bad">HAYIR</span>'}</td></tr>`).join('');
+  out.innerHTML=`${best?`<div class="note"><b>Önerilen en hafif profil: ${best.name}</b> (${best.G} kg/m, D/C=${best.maxDC.toFixed(2)})</div>`:'<div class="note" style="border-left-color:var(--bad)">Bu ailede uygun profil bulunamadı — daha büyük aile (örn. HEM) deneyin.</div>'}
+    <div class="tblwrap" style="max-height:340px"><table><thead><tr>
+      <th style="text-align:left">Profil</th><th>Ağırlık kg/m</th><th>Maks D/C</th><th style="text-align:center">Durum</th>
+    </tr></thead><tbody>${rows}</tbody></table></div>
+    <div class="muted small">Not: Asistan basitleştirilmiş kapasitelerle hızlı tarama yapar; nihai seçim için Sekme 4'teki tam kontrolü çalıştırın.</div>`;
+}
+document.getElementById('advisorBtn').onclick=runAdvisor;
+
+/* -------- başlangıç -------- */
+renderDB();
+updateSel();
+// varsayılan seçim: IPE 300
+SEL=DB.IPE.find(p=>p[0]==='IPE 300');SELFAM='IPE';renderDB();updateSel();renderDuct();
+</script>
+</body>
+</html>
