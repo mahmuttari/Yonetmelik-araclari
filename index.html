@@ -97,10 +97,11 @@
 <div class="wrap">
   <div class="tabs">
     <div class="tab active" data-v="db">1 · Profil Veritabanı</div>
-    <div class="tab" data-v="mat">2 · Malzeme &amp; Eleman</div>
-    <div class="tab" data-v="duct">3 · Süneklik (TBDY Tablo 9.3)</div>
-    <div class="tab" data-v="design">4 · Tasarım Kontrolleri</div>
-    <div class="tab" data-v="results">5 · Sonuç Raporu</div>
+    <div class="tab" data-v="custom">2 · 📐 Özel Kesit (Elle Ölçü)</div>
+    <div class="tab" data-v="mat">3 · Malzeme &amp; Eleman</div>
+    <div class="tab" data-v="duct">4 · Süneklik (TBDY Tablo 9.3)</div>
+    <div class="tab" data-v="design">5 · Tasarım Kontrolleri</div>
+    <div class="tab" data-v="results">6 · Sonuç Raporu</div>
     <div class="tab" data-v="help">ℹ️ Bilgi</div>
   </div>
 
@@ -154,7 +155,74 @@
     </div>
   </div>
 
-  <!-- ================= 2. MALZEME ================= -->
+  <!-- ================= 2. OZEL KESIT (ELLE OLCU) ================= -->
+  <div class="view" id="v-custom">
+    <div class="grid g2">
+      <div class="card">
+        <h2>Özel Kesit — Elle Ölçü Girişi</h2>
+        <p class="muted">Geometri tipini seçip tüm ölçüleri girin. Kesit özellikleri (A, I, W<sub>el</sub>, W<sub>pl</sub>, i) otomatik hesaplanır. Kaynaklı / yapma (built-up) ve standart olmayan kesitler için idealdir.</p>
+        <label>Geometri tipi</label>
+        <select id="cKind">
+          <option value="I">I / H kesit (çift simetrik — IPE, HEA/B/M, yapma I)</option>
+          <option value="U">U / Kanal (UPN tipi)</option>
+          <option value="BOX">Kutu / dikdörtgen kapalı kesit (□)</option>
+          <option value="CHS">Dairesel boru (○)</option>
+        </select>
+        <label>Kesit adı (isteğe bağlı)</label>
+        <input id="cName" placeholder="örn. Yapma I 500x300">
+
+        <div id="cDimsI" class="cdims">
+          <div class="row">
+            <div><label>h — toplam yükseklik (mm)</label><input id="cI_h" type="number" value="500"></div>
+            <div><label>b — başlık genişliği (mm)</label><input id="cI_b" type="number" value="300"></div>
+          </div>
+          <div class="row">
+            <div><label>t<sub>w</sub> — gövde kalınlığı (mm)</label><input id="cI_tw" type="number" value="10"></div>
+            <div><label>t<sub>f</sub> — başlık kalınlığı (mm)</label><input id="cI_tf" type="number" value="16"></div>
+          </div>
+        </div>
+        <div id="cDimsU" class="cdims" style="display:none">
+          <div class="row">
+            <div><label>h — yükseklik (mm)</label><input id="cU_h" type="number" value="200"></div>
+            <div><label>b — başlık genişliği (mm)</label><input id="cU_b" type="number" value="75"></div>
+          </div>
+          <div class="row">
+            <div><label>t<sub>w</sub> — gövde kalınlığı (mm)</label><input id="cU_tw" type="number" value="8.5"></div>
+            <div><label>t<sub>f</sub> — başlık kalınlığı (mm)</label><input id="cU_tf" type="number" value="11.5"></div>
+          </div>
+        </div>
+        <div id="cDimsBOX" class="cdims" style="display:none">
+          <div class="row">
+            <div><label>h — yükseklik (mm)</label><input id="cB_h" type="number" value="200"></div>
+            <div><label>b — genişlik (mm)</label><input id="cB_b" type="number" value="200"></div>
+          </div>
+          <div class="row">
+            <div><label>t<sub>w</sub> — dikey cidar (mm)</label><input id="cB_tw" type="number" value="8"></div>
+            <div><label>t<sub>f</sub> — yatay cidar (mm)</label><input id="cB_tf" type="number" value="8"></div>
+          </div>
+          <div class="note small">Eşit cidarlı (t) profil için her iki kutuya aynı değeri girin.</div>
+        </div>
+        <div id="cDimsCHS" class="cdims" style="display:none">
+          <div class="row">
+            <div><label>D — dış çap (mm)</label><input id="cC_D" type="number" value="219.1"></div>
+            <div><label>t — cidar kalınlığı (mm)</label><input id="cC_t" type="number" value="6"></div>
+          </div>
+        </div>
+
+        <button class="btn" id="cCalcBtn" style="margin-top:14px;width:100%">⚙ Özellikleri Hesapla</button>
+        <button class="btn sec" id="cUseBtn" style="margin-top:8px;width:100%">✓ Bu Kesiti Seç ve Kullan</button>
+        <div class="note small">Hesaplanan değerler keskin köşeli (ideal) geometriye göredir; köşe kıvrımları (fillet) ihmal edilir. Standart sıcak haddelenmiş profiller için Sekme 1'deki tablo değerleri esas alınmalıdır (özellikle kanal zayıf ekseni yaklaşıktır).</div>
+      </div>
+
+      <div class="card">
+        <h2>Hesaplanan Kesit Özellikleri</h2>
+        <div id="cPreview" style="text-align:center;margin-bottom:10px"></div>
+        <div id="cProps"><p class="muted">Ölçüleri girip "Özellikleri Hesapla" butonuna basın.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= 3. MALZEME ================= -->
   <div class="view" id="v-mat">
     <div class="grid g2">
       <div class="card">
@@ -193,7 +261,7 @@
           <option value="moderate" selected>Sınırlı Süneklik Düzeyi (SSD / λ<sub>md</sub>)</option>
           <option value="none">Süneklik gözetilmeyen (yalnız elastik enkesit sınıfı)</option>
         </select>
-        <div class="note small">TBDY 2018 Tablo 4.1: süneklik düzeyi yüksek sistemlerde R büyür, fakat enkesit ve birleşim koşulları daha katıdır. Seçim, Sekme 3'teki enkesit kontrolünü belirler.</div>
+        <div class="note small">TBDY 2018 Tablo 4.1: süneklik düzeyi yüksek sistemlerde R büyür, fakat enkesit ve birleşim koşulları daha katıdır. Seçim, Sekme 4'teki enkesit kontrolünü belirler.</div>
         <h3>Eleman boyu &amp; mesnetlenme</h3>
         <div class="row">
           <div><label>L — eleman boyu (m)</label><input id="L" type="number" step="0.1" value="4.0"></div>
@@ -445,7 +513,7 @@ let SEL=null;       // seçili profil dizisi
 let SELFAM=null;
 function fields(p){return{name:p[0],h:p[1],b:p[2],tw:p[3],tf:p[4],A:p[5],G:p[6],
   Iy:p[7],Wely:p[8],Wply:p[9],iy:p[10],Iz:p[11],Welz:p[12],Wplz:p[13],iz:p[14]};}
-function isI(fam){return fam==='IPE'||fam==='HEA'||fam==='HEB'||fam==='HEM';}
+function isI(fam){return fam==='IPE'||fam==='HEA'||fam==='HEB'||fam==='HEM'||fam==='I';}
 
 /* -------- Sekme yönetimi -------- */
 document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
@@ -538,6 +606,133 @@ function updateSel(){
       <div class="kv"><span>i<sub>y</sub> / i<sub>z</sub></span><b>${f.iy} / ${f.iz} cm</b></div>
     </div></div>`;
 }
+
+/* ============================================================
+   ÖZEL KESİT — ELLE ÖLÇÜ GİRİŞİ (geometriden kesit özellikleri)
+   Çıktı dizisi fields() formatıyla aynı:
+   [ad,h,b,tw,tf,A(cm2),G(kg/m),Iy(cm4),Wely(cm3),Wply(cm3),iy(cm),
+    Iz(cm4),Welz(cm3),Wplz(cm3),iz(cm)]
+   ============================================================ */
+const RHO=7850; // kg/m3
+function gmass(A_mm2){return A_mm2*RHO/1e6;} // mm2 -> kg/m
+
+// I / H çift simetrik
+function secI(h,b,tw,tf){
+  const A=2*b*tf+(h-2*tf)*tw;
+  const Iy=(b*Math.pow(h,3)-(b-tw)*Math.pow(h-2*tf,3))/12;
+  const Wely=Iy/(h/2);
+  const Wply=b*tf*(h-tf)+tw*Math.pow(h-2*tf,2)/4;
+  const Iz=(2*tf*Math.pow(b,3)+(h-2*tf)*Math.pow(tw,3))/12;
+  const Welz=Iz/(b/2);
+  const Wplz=b*b*tf/2+(h-2*tf)*tw*tw/4;
+  return {A,Iy,Wely,Wply,Iz,Welz,Wplz};
+}
+// U / Kanal
+function secU(h,b,tw,tf){
+  const Aweb=h*tw, Afl=(b-tw)*tf;
+  const A=Aweb+2*Afl;
+  // güçlü eksen (yatay, simetri ekseni) — mid-height
+  const Iy=tw*Math.pow(h,3)/12 + 2*((b-tw)*Math.pow(tf,3)/12 + Afl*Math.pow((h-tf)/2,2));
+  const Wely=Iy/(h/2);
+  const Wply=tw*h*h/4 + (b-tw)*tf*(h-tf);
+  // zayıf eksen (dikey) — centroid web sırtından
+  const xw=tw/2, xf=tw+(b-tw)/2;
+  const xbar=(Aweb*xw+2*Afl*xf)/A;
+  const Iz=h*Math.pow(tw,3)/12 + Aweb*Math.pow(xbar-xw,2)
+          +2*(tf*Math.pow(b-tw,3)/12 + Afl*Math.pow(xf-xbar,2));
+  const Welz=Iz/Math.max(xbar,b-xbar);
+  // plastik (zayıf) yaklaşık: alanların yarıya bölündüğü düşey eksene göre
+  const Wplz=Aweb*Math.abs(xbar-xw)+2*Afl*Math.abs(xf-xbar); // yaklaşık 1.mertebe
+  return {A,Iy,Wely,Wply,Iz,Welz,Wplz,xbar};
+}
+// Kutu (dikdörtgen kapalı)
+function secBox(h,b,tw,tf){
+  // tw: dikey cidar, tf: yatay cidar
+  const A=b*h-(b-2*tw)*(h-2*tf);
+  const Iy=(b*Math.pow(h,3)-(b-2*tw)*Math.pow(h-2*tf,3))/12;
+  const Wely=Iy/(h/2);
+  const Wply=b*h*h/4-(b-2*tw)*Math.pow(h-2*tf,2)/4;
+  const Iz=(h*Math.pow(b,3)-(h-2*tf)*Math.pow(b-2*tw,3))/12;
+  const Welz=Iz/(b/2);
+  const Wplz=h*b*b/4-(h-2*tf)*Math.pow(b-2*tw,2)/4;
+  return {A,Iy,Wely,Wply,Iz,Welz,Wplz};
+}
+// Dairesel boru
+function secCHS(D,t){
+  const di=D-2*t;
+  const A=Math.PI/4*(D*D-di*di);
+  const Iy=Math.PI/64*(Math.pow(D,4)-Math.pow(di,4));
+  const Wely=Iy/(D/2);
+  const Wply=(Math.pow(D,3)-Math.pow(di,3))/6;
+  return {A,Iy,Wely,Wply,Iz:Iy,Welz:Wely,Wplz:Wply};
+}
+
+function cGetDims(){
+  const kind=document.getElementById('cKind').value;
+  if(kind==='I')  return {kind,h:+cI_h.value,b:+cI_b.value,tw:+cI_tw.value,tf:+cI_tf.value};
+  if(kind==='U')  return {kind,h:+cU_h.value,b:+cU_b.value,tw:+cU_tw.value,tf:+cU_tf.value};
+  if(kind==='BOX')return {kind,h:+cB_h.value,b:+cB_b.value,tw:+cB_tw.value,tf:+cB_tf.value};
+  return {kind,D:+cC_D.value,t:+cC_t.value};
+}
+function cBuildProfile(){
+  const d=cGetDims();let s,h,b,tw,tf,name;
+  if(d.kind==='I'){s=secI(d.h,d.b,d.tw,d.tf);h=d.h;b=d.b;tw=d.tw;tf=d.tf;}
+  else if(d.kind==='U'){s=secU(d.h,d.b,d.tw,d.tf);h=d.h;b=d.b;tw=d.tw;tf=d.tf;}
+  else if(d.kind==='BOX'){s=secBox(d.h,d.b,d.tw,d.tf);h=d.h;b=d.b;tw=d.tw;tf=d.tf;}
+  else {s=secCHS(d.D,d.t);h=d.D;b=d.D;tw=d.t;tf=d.t;}
+  if(!(s.A>0)||!isFinite(s.A)){return null;}
+  const iy=Math.sqrt(s.Iy/s.A), iz=Math.sqrt(s.Iz/s.A);
+  const nm=(document.getElementById('cName').value.trim())||('Özel '+d.kind+' '+Math.round(h)+'×'+Math.round(b));
+  // fields() formatı, birimler: A cm2, I cm4, W cm3, i cm
+  return {
+    fam: d.kind, // 'I','U'->UPN-benzeri,'BOX','CHS'
+    arr:[nm,h,b,tw,tf, s.A/100, +gmass(s.A).toFixed(1),
+         s.Iy/1e4, s.Wely/1e3, s.Wply/1e3, iy/10,
+         s.Iz/1e4, s.Welz/1e3, s.Wplz/1e3, iz/10],
+    extra:s
+  };
+}
+function cRenderProps(){
+  const r=cBuildProfile();
+  const box=document.getElementById('cProps');
+  const pv=document.getElementById('cPreview');
+  if(!r){box.innerHTML='<p class="flag">Geçersiz ölçüler — kalınlıklar genişlik/yükseklikten küçük olmalı.</p>';pv.innerHTML='';return;}
+  const f=fields(r.arr);
+  const svgFam = r.fam==='U'?'UPN':r.fam;
+  pv.innerHTML=profileSVG(r.arr,svgFam);
+  box.innerHTML=`
+    <div style="font-size:16px;font-weight:700;color:var(--accent);margin-bottom:6px">${f.name}</div>
+    <div class="kv"><span>A — kesit alanı</span><b>${f.A.toFixed(2)} cm²</b></div>
+    <div class="kv"><span>G — birim ağırlık</span><b>${f.G} kg/m</b></div>
+    <div class="kv"><span>I<sub>y</sub> — güçlü eksen atalet</span><b>${f.Iy.toFixed(0)} cm⁴</b></div>
+    <div class="kv"><span>W<sub>el,y</sub></span><b>${f.Wely.toFixed(1)} cm³</b></div>
+    <div class="kv"><span>W<sub>pl,y</sub></span><b>${f.Wply.toFixed(1)} cm³</b></div>
+    <div class="kv"><span>i<sub>y</sub></span><b>${f.iy.toFixed(2)} cm</b></div>
+    <div class="kv"><span>I<sub>z</sub> — zayıf eksen atalet</span><b>${f.Iz.toFixed(0)} cm⁴</b></div>
+    <div class="kv"><span>W<sub>el,z</sub></span><b>${f.Welz.toFixed(1)} cm³</b></div>
+    <div class="kv"><span>W<sub>pl,z</sub></span><b>${f.Wplz.toFixed(1)} cm³</b></div>
+    <div class="kv"><span>i<sub>z</sub></span><b>${f.iz.toFixed(2)} cm</b></div>
+    ${r.fam==='U'?`<div class="kv"><span>e — ağırlık merkezi (sırttan)</span><b>${(r.extra.xbar/10).toFixed(2)} cm</b></div>
+      <div class="flag">Kanal zayıf ekseni (I<sub>z</sub>, W<sub>pl,z</sub>) idealize geometriyle yaklaşık hesaplanır.</div>`:''}`;
+}
+function cToggleDims(){
+  const kind=document.getElementById('cKind').value;
+  ['I','U','BOX','CHS'].forEach(k=>{
+    document.getElementById('cDims'+k).style.display = (k===kind)?'block':'none';
+  });
+}
+document.getElementById('cKind').onchange=()=>{cToggleDims();cRenderProps();};
+document.getElementById('cCalcBtn').onclick=cRenderProps;
+document.querySelectorAll('#v-custom input').forEach(el=>el.addEventListener('input',cRenderProps));
+document.getElementById('cUseBtn').onclick=()=>{
+  const r=cBuildProfile();
+  if(!r){alert('Geçersiz ölçüler — kesit hesaplanamadı.');return;}
+  SEL=r.arr;
+  SELFAM = r.fam==='U'?'UPN':r.fam;  // 'I','UPN','BOX','CHS'
+  renderDB();updateSel();renderDuct();
+  alert('"'+r.arr[0]+'" seçildi. Artık tüm sekmelerde bu kesit kullanılacak.');
+  document.querySelector('.tab[data-v="duct"]').click();
+};
 
 /* ============================================================
    SÜNEKLİK / ENKESİT KONTROLÜ (TBDY 2018 Tablo 9.3 + EC3)
@@ -890,13 +1085,15 @@ function runAdvisor(){
     <div class="tblwrap" style="max-height:340px"><table><thead><tr>
       <th style="text-align:left">Profil</th><th>Ağırlık kg/m</th><th>Maks D/C</th><th style="text-align:center">Durum</th>
     </tr></thead><tbody>${rows}</tbody></table></div>
-    <div class="muted small">Not: Asistan basitleştirilmiş kapasitelerle hızlı tarama yapar; nihai seçim için Sekme 4'teki tam kontrolü çalıştırın.</div>`;
+    <div class="muted small">Not: Asistan basitleştirilmiş kapasitelerle hızlı tarama yapar; nihai seçim için Sekme 5'teki tam kontrolü çalıştırın.</div>`;
 }
 document.getElementById('advisorBtn').onclick=runAdvisor;
 
 /* -------- başlangıç -------- */
 renderDB();
 updateSel();
+cToggleDims();
+cRenderProps();
 // varsayılan seçim: IPE 300
 SEL=DB.IPE.find(p=>p[0]==='IPE 300');SELFAM='IPE';renderDB();updateSel();renderDuct();
 </script>
