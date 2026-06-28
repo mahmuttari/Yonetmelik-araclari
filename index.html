@@ -321,6 +321,22 @@
   <!-- ================= 5. SONUCLAR ================= -->
   <div class="view" id="v-results">
     <div class="card">
+      <h2>Rapor Bilgileri &amp; Dışa Aktarma</h2>
+      <div class="row">
+        <div><label>Proje adı</label><input id="rpProject" placeholder="örn. ... Çelik Endüstri Yapısı"></div>
+        <div><label>Eleman / poz adı</label><input id="rpMember" placeholder="örn. K-12 Çatı Kirişi"></div>
+      </div>
+      <div class="row">
+        <div><label>Hazırlayan (mühendis)</label><input id="rpEngineer" placeholder="Ad Soyad"></div>
+        <div><label>Tarih</label><input id="rpDate" type="date"></div>
+      </div>
+      <div class="row" style="margin-top:14px">
+        <button class="btn" id="pdfBtn">📄 PDF Raporu (Yazdır → PDF)</button>
+        <button class="btn sec" id="wordBtn">📝 Word (.doc) İndir</button>
+      </div>
+      <div class="note small">Rapor; seçili profil, malzeme, süneklik (TBDY Tablo 9.3) kontrolü, tasarım iç kuvvetleri ve tüm kapasite/kullanım oranı (D/C) sonuçlarını içerir. PDF için açılan pencerede tarayıcının "Hedef: PDF olarak kaydet" seçeneğini kullanın (Türkçe karakterler ve biçim tam korunur).</div>
+    </div>
+    <div class="card" style="margin-top:16px">
       <h2>Sonuç Raporu — Kullanım Oranları (D/C)</h2>
       <div id="resultsOut"><p class="muted">Henüz hesap yapılmadı.</p></div>
     </div>
@@ -737,73 +753,67 @@ document.getElementById('cUseBtn').onclick=()=>{
 /* ============================================================
    SÜNEKLİK / ENKESİT KONTROLÜ (TBDY 2018 Tablo 9.3 + EC3)
    ============================================================ */
-function renderDuct(){
-  const out=document.getElementById('ductOut');
-  if(!SEL){out.innerHTML='<p class="muted">Önce Sekme 1\'den bir profil seçin.</p>';return;}
+// Süneklik satırlarını VERİ olarak üretir (renderDuct + rapor ortak kaynağı)
+function computeDuctData(){
+  if(!SEL)return null;
   const f=fields(SEL);
   const Fy=+document.getElementById('Fy').value;
   const E=+document.getElementById('E').value;
   const lvl=document.getElementById('ductLevel').value;
-  const sq=Math.sqrt(E/Fy);
-  const eps=Math.sqrt(235/Fy);
-  let rows='';
-
-  function lim(label,ratio,hd,md,kind){
-    let limit, limLabel;
+  const sq=Math.sqrt(E/Fy), eps=Math.sqrt(235/Fy);
+  const rows=[];
+  function lim(label,ratio,hd,md){
+    let limit=null,limLabel='—';
     if(lvl==='high'){limit=hd;limLabel='λ_hd';}
     else if(lvl==='moderate'){limit=md;limLabel='λ_md';}
-    else{limit=null;}
-    let badge;
-    if(limit===null){badge='<span class="badge b-warn">—</span>';}
-    else if(ratio<=limit){badge='<span class="badge b-ok">UYGUN</span>';}
-    else badge='<span class="badge b-bad">AŞIM</span>';
-    return `<tr><td style="text-align:left">${label}</td>
-      <td>${ratio.toFixed(2)}</td>
-      <td>${hd.toFixed(2)}</td><td>${md.toFixed(2)}</td>
-      <td>${limit===null?'—':limit.toFixed(2)+' ('+limLabel+')'}</td>
-      <td style="text-align:center">${badge}</td></tr>`;
+    const ok = limit===null?null:(ratio<=limit);
+    rows.push({label,ratio,hd,md,limit,limLabel,ok});
   }
-
-  if(isI(f.name?'':'')||isI(SELFAM)){
-    // Başlık (flanş) — konsol (unstiffened): b/2tf
-    const flR=(f.b/2)/f.tf;
-    rows+=lim('Başlık b/(2·t<sub>f</sub>) — konsol', flR, 0.30*sq, 0.38*sq);
-    // Gövde (web) — eğilmede (stiffened): hw/tw  (hw ≈ h - 2tf, yaklaşık h-2.5tf köşe ile)
-    const hw=f.h-2*f.tf;
-    const wR=hw/f.tw;
-    rows+=lim('Gövde h<sub>w</sub>/t<sub>w</sub> — eğilme', wR, 2.45*sq, 3.76*sq);
-  } else if(SELFAM==='BOX'){
-    const hw=f.h-2*f.tf;
-    const wallR=hw/f.tw;
-    rows+=lim('Kutu cidar b/t — eksenel basınç', wallR, 1.40*sq, 1.40*sq);
-    rows+=lim('Kutu cidar b/t — eğilme', wallR, 2.42*sq, 2.42*sq);
-  } else if(SELFAM==='CHS'){
-    const D_t=f.h/f.tw;
-    rows+=lim('Boru D/t — eğilme/basınç', D_t, 0.044*E/Fy, 0.07*E/Fy);
-  } else if(SELFAM==='UPN'){
-    const flR=f.b/f.tf;
-    rows+=lim('U başlık b/t<sub>f</sub>', flR, 0.30*sq, 0.38*sq);
-    const wR=(f.h-2*f.tf)/f.tw;
-    rows+=lim('U gövde h<sub>w</sub>/t<sub>w</sub>', wR, 2.45*sq, 3.76*sq);
-  }
-
-  // EC3 enkesit sınıfı (I kesit, eğilme)
-  let ec3='';
   if(isI(SELFAM)){
-    const cf=(f.b/2 - f.tw/2)/f.tf; // outstand flange
-    const cw=(f.h-2*f.tf)/f.tw;     // web
-    let flCls=cf<=9*eps?1:cf<=10*eps?2:cf<=14*eps?3:4;
-    let wCls=cw<=72*eps?1:cw<=83*eps?2:cw<=124*eps?3:4; // web in bending
-    const cls=Math.max(flCls,wCls);
-    ec3=`<div class="note small">
-      <b>TS EN 1993-1-1 elastik enkesit sınıfı (ε=${eps.toFixed(3)}):</b><br>
-      Başlık c/t<sub>f</sub> = ${cf.toFixed(2)} → Sınıf ${flCls} ·
-      Gövde c/t<sub>w</sub> = ${cw.toFixed(2)} → Sınıf ${wCls} ·
-      <b>Belirleyici: Sınıf ${cls}</b> ${cls<=2?'(plastik kapasite kullanılabilir)':cls===3?'(elastik kapasite)':'(yerel burkulma — etkin kesit gerekir)'}</div>`;
+    lim('Başlık b/(2·tf) — konsol',(f.b/2)/f.tf,0.30*sq,0.38*sq);
+    lim('Gövde hw/tw — eğilme',(f.h-2*f.tf)/f.tw,2.45*sq,3.76*sq);
+  } else if(SELFAM==='BOX'){
+    const r=(f.h-2*f.tf)/f.tw;
+    lim('Kutu cidar b/t — basınç',r,1.40*sq,1.40*sq);
+    lim('Kutu cidar b/t — eğilme',r,2.42*sq,2.42*sq);
+  } else if(SELFAM==='CHS'){
+    lim('Boru D/t — eğilme/basınç',f.h/f.tw,0.044*E/Fy,0.07*E/Fy);
+  } else if(SELFAM==='UPN'){
+    lim('U başlık b/tf',f.b/f.tf,0.30*sq,0.38*sq);
+    lim('U gövde hw/tw',(f.h-2*f.tf)/f.tw,2.45*sq,3.76*sq);
   }
-
+  let ec3=null;
+  if(isI(SELFAM)){
+    const cf=(f.b/2-f.tw/2)/f.tf, cw=(f.h-2*f.tf)/f.tw;
+    const flCls=cf<=9*eps?1:cf<=10*eps?2:cf<=14*eps?3:4;
+    const wCls=cw<=72*eps?1:cw<=83*eps?2:cw<=124*eps?3:4;
+    ec3={eps,cf,cw,flCls,wCls,cls:Math.max(flCls,wCls)};
+  }
+  return {f,Fy,E,lvl,sq,eps,rows,ec3,
+    lvlText:lvl==='high'?'Yüksek (λ_hd)':lvl==='moderate'?'Sınırlı (λ_md)':'Gözetilmiyor'};
+}
+function renderDuct(){
+  const out=document.getElementById('ductOut');
+  if(!SEL){out.innerHTML='<p class="muted">Önce Sekme 1\'den bir profil seçin.</p>';return;}
+  const D=computeDuctData();const f=D.f;
+  let rows=D.rows.map(r=>{
+    const badge=r.ok===null?'<span class="badge b-warn">—</span>':
+      r.ok?'<span class="badge b-ok">UYGUN</span>':'<span class="badge b-bad">AŞIM</span>';
+    return `<tr><td style="text-align:left">${r.label}</td><td>${r.ratio.toFixed(2)}</td>
+      <td>${r.hd.toFixed(2)}</td><td>${r.md.toFixed(2)}</td>
+      <td>${r.limit===null?'—':r.limit.toFixed(2)+' ('+r.limLabel+')'}</td>
+      <td style="text-align:center">${badge}</td></tr>`;
+  }).join('');
+  let ec3='';
+  if(D.ec3){const e=D.ec3;
+    ec3=`<div class="note small"><b>TS EN 1993-1-1 elastik enkesit sınıfı (ε=${e.eps.toFixed(3)}):</b><br>
+      Başlık c/t<sub>f</sub> = ${e.cf.toFixed(2)} → Sınıf ${e.flCls} ·
+      Gövde c/t<sub>w</sub> = ${e.cw.toFixed(2)} → Sınıf ${e.wCls} ·
+      <b>Belirleyici: Sınıf ${e.cls}</b> ${e.cls<=2?'(plastik kapasite kullanılabilir)':e.cls===3?'(elastik kapasite)':'(yerel burkulma — etkin kesit gerekir)'}</div>`;
+  }
+  const Fy=D.Fy,sq=D.sq;
   out.innerHTML=`
-    <div class="note small">Süneklik düzeyi: <b>${lvl==='high'?'Yüksek (λ_hd)':lvl==='moderate'?'Sınırlı (λ_md)':'Gözetilmiyor'}</b> ·
+    <div class="note small">Süneklik düzeyi: <b>${D.lvlText}</b> ·
     Profil: <b>${f.name}</b> · F<sub>y</sub>=${Fy} MPa · √(E/F<sub>y</sub>)=${sq.toFixed(2)}</div>
     <div class="tblwrap" style="max-height:none">
     <table><thead><tr>
@@ -1089,11 +1099,185 @@ function runAdvisor(){
 }
 document.getElementById('advisorBtn').onclick=runAdvisor;
 
+/* ============================================================
+   PDF / WORD RAPOR ÜRETİMİ
+   ============================================================ */
+function selText(id){const el=document.getElementById(id);return el.options[el.selectedIndex].text;}
+function val(id){return document.getElementById(id).value;}
+
+function buildReportData(){
+  if(!SEL)return {err:'Önce bir profil seçin (Sekme 1 veya Özel Kesit).'};
+  if(!window.LASTRES)return {err:'Önce Tasarım Kontrolünü çalıştırın (Sekme 5).'};
+  const f=fields(SEL);const res=window.LASTRES;
+  const duct=computeDuctData();
+  // genel sonuç (maks D/C)
+  let maxDC=0;
+  const dcs=[];
+  if(res.tension){dcs.push(['Çekme',res.tension.dc]);}
+  if(res.comp){dcs.push(['Basınç (burkulma)',res.comp.dc]);}
+  dcs.push(['Eğilme — güçlü eksen (My)',res.flexY.dc]);
+  if(res.flexZ.demand>0)dcs.push(['Eğilme — zayıf eksen (Mz)',res.flexZ.dc]);
+  dcs.push(['Kesme',res.shear.dc]);
+  dcs.push(['Bileşik etki (eksenel+eğilme)',res.combined.ic]);
+  dcs.forEach(d=>maxDC=Math.max(maxDC,d[1]));
+  return {f,res,duct,dcs,maxDC,
+    proj:val('rpProject')||'—', member:val('rpMember')||'—',
+    eng:val('rpEngineer')||'—', date:val('rpDate')||new Date().toISOString().slice(0,10),
+    steel:selText('steel'), Fy:val('Fy'),Fu:val('Fu'),E:val('E'),Ry:val('Ry'),
+    mtype:selText('memberType'), dlevel:selText('ductLevel'),
+    L:val('L'),K:val('K'),Lb:val('Lb'),Cb:val('Cb'),
+    Nd:val('Nd'),axType:selText('axType'),Myd:val('Myd'),Mzd:val('Mzd'),Vd:val('Vd'),
+    fam:SELFAM};
+}
+
+function dcBadge(dc){return dc<=1.0?
+  '<span style="color:#15803d;font-weight:700">UYGUN</span>':
+  '<span style="color:#b91c1c;font-weight:700">YETERSİZ</span>';}
+
+function buildReportHTML(d){
+  const f=d.f;const res=d.res;
+  const overall=d.maxDC<=1.0;
+  // süneklik tablosu
+  let ductRows=d.duct.rows.map(r=>{
+    const st=r.ok===null?'—':(r.ok?'<span style="color:#15803d;font-weight:700">UYGUN</span>':'<span style="color:#b91c1c;font-weight:700">AŞIM</span>');
+    return `<tr><td style="text-align:left">${r.label.replace(/<[^>]+>/g,'')}</td>
+      <td>${r.ratio.toFixed(2)}</td><td>${r.hd.toFixed(2)}</td><td>${r.md.toFixed(2)}</td>
+      <td>${r.limit===null?'—':r.limit.toFixed(2)}</td><td>${st}</td></tr>`;}).join('');
+  let ec3='';
+  if(d.duct.ec3){const e=d.duct.ec3;
+    ec3=`<p class="small">TS EN 1993-1-1 elastik enkesit sınıfı (ε=${e.eps.toFixed(3)}): başlık → Sınıf ${e.flCls}, gövde → Sınıf ${e.wCls}, <b>belirleyici Sınıf ${e.cls}</b>.</p>`;}
+  // D/C tablosu
+  let dcRows=d.dcs.map(x=>{
+    const pct=Math.min(x[1]*100,100);
+    const col=x[1]<=0.85?'#16a34a':x[1]<=1.0?'#d97706':'#dc2626';
+    return `<tr><td style="text-align:left">${x[0]}</td><td>${x[1].toFixed(2)}</td>
+      <td><div style="background:#e5e7eb;border-radius:8px;height:14px;width:120px;display:inline-block;overflow:hidden;vertical-align:middle">
+        <div style="height:100%;width:${pct}%;background:${col}"></div></div></td>
+      <td>${dcBadge(x[1])}</td></tr>`;}).join('');
+  // kapasite özeti
+  let cap='';
+  if(res.tension)cap+=`<tr><td style="text-align:left">Çekme dayanımı φNt (${res.tension.gov})</td><td>${(res.tension.Nc/1000).toFixed(0)} kN</td></tr>`;
+  if(res.comp)cap+=`<tr><td style="text-align:left">Basınç dayanımı φNc (KL/r=${res.comp.lam.toFixed(0)})</td><td>${(res.comp.Nc/1000).toFixed(0)} kN</td></tr>`;
+  cap+=`<tr><td style="text-align:left">Eğilme φMn,y (${res.flexY.mode})</td><td>${(res.flexY.phiMn/1e6).toFixed(1)} kNm</td></tr>`;
+  if(res.flexZ.demand>0)cap+=`<tr><td style="text-align:left">Eğilme φMn,z</td><td>${(res.flexZ.phiMn/1e6).toFixed(1)} kNm</td></tr>`;
+  cap+=`<tr><td style="text-align:left">Kesme φVn</td><td>${(res.shear.phiVn/1000).toFixed(0)} kN</td></tr>`;
+  cap+=`<tr><td style="text-align:left">Bileşik etki (${res.combined.eq})</td><td>oran ${res.combined.ic.toFixed(2)}</td></tr>`;
+
+  return `<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8">
+<title>Çelik Profil Tasarım Raporu — ${f.name}</title>
+<style>
+  *{box-sizing:border-box}
+  body{font-family:"Segoe UI",Arial,sans-serif;color:#1f2937;font-size:12px;margin:0;padding:28px}
+  h1{font-size:18px;margin:0 0 2px;color:#0e7490}
+  h2{font-size:13.5px;color:#0e7490;border-bottom:2px solid #0e7490;padding-bottom:3px;margin:18px 0 8px}
+  .sub{color:#6b7280;font-size:11px;margin-bottom:12px}
+  table{width:100%;border-collapse:collapse;margin:6px 0;font-size:11.5px}
+  th,td{border:1px solid #d1d5db;padding:5px 7px;text-align:right}
+  th{background:#ecfeff;color:#0e7490;text-align:right}
+  td:first-child,th:first-child{text-align:left}
+  .meta td{border:none;padding:2px 8px 2px 0}
+  .meta td:first-child{color:#6b7280;width:140px}
+  .verdict{padding:10px 14px;border-radius:8px;font-size:14px;font-weight:700;margin:10px 0;
+    background:${overall?'#dcfce7':'#fee2e2'};color:${overall?'#15803d':'#b91c1c'};border:1px solid ${overall?'#86efac':'#fca5a5'}}
+  .small{font-size:10.5px;color:#6b7280}
+  .foot{margin-top:24px;border-top:1px solid #d1d5db;padding-top:8px;color:#6b7280;font-size:10px}
+  .two{display:flex;gap:24px}.two>div{flex:1}
+  @media print{body{padding:12mm}.noprint{display:none}}
+</style></head><body>
+<h1>🏗️ Çelik Profil Tasarım ve Kontrol Raporu</h1>
+<div class="sub">TBDY 2018 (Bölüm 9) &amp; ÇYTHYE 2018 — YDKT (LRFD) · Yön. araçları</div>
+
+<table class="meta">
+  <tr><td>Proje</td><td><b>${d.proj}</b></td><td>Tarih</td><td><b>${d.date}</b></td></tr>
+  <tr><td>Eleman / Poz</td><td><b>${d.member}</b></td><td>Hazırlayan</td><td><b>${d.eng}</b></td></tr>
+</table>
+
+<div class="verdict">${overall?'✓ SONUÇ: PROFİL YETERLİ':'✗ SONUÇ: PROFİL YETERSİZ'} — En yüksek kullanım oranı D/C = ${d.maxDC.toFixed(2)}${overall?'  ('+((1-d.maxDC)*100).toFixed(0)+'% rezerv)':''}</div>
+
+<div class="two">
+<div>
+<h2>Seçilen Profil</h2>
+<table>
+<tr><td>Profil</td><td><b>${f.name}</b> (${d.fam})</td></tr>
+<tr><td>h × b</td><td>${f.h} × ${f.b} mm</td></tr>
+<tr><td>tw / tf</td><td>${f.tw} / ${f.tf} mm</td></tr>
+<tr><td>A</td><td>${f.A.toFixed(2)} cm²</td></tr>
+<tr><td>Birim ağırlık</td><td>${f.G} kg/m</td></tr>
+<tr><td>Iy / Iz</td><td>${f.Iy.toFixed(0)} / ${f.Iz.toFixed(0)} cm⁴</td></tr>
+<tr><td>Wpl,y / Wpl,z</td><td>${f.Wply.toFixed(0)} / ${f.Wplz.toFixed(0)} cm³</td></tr>
+<tr><td>iy / iz</td><td>${f.iy.toFixed(2)} / ${f.iz.toFixed(2)} cm</td></tr>
+</table>
+</div>
+<div>
+<h2>Malzeme &amp; Eleman</h2>
+<table>
+<tr><td>Çelik sınıfı</td><td>${d.steel.split('—')[0]}</td></tr>
+<tr><td>Fy / Fu</td><td>${d.Fy} / ${d.Fu} MPa</td></tr>
+<tr><td>E</td><td>${d.E} MPa</td></tr>
+<tr><td>Eleman tipi</td><td>${d.mtype}</td></tr>
+<tr><td>Süneklik düzeyi</td><td>${d.dlevel}</td></tr>
+<tr><td>L / K</td><td>${d.L} m / ${d.K}</td></tr>
+<tr><td>Lb / Cb</td><td>${d.Lb} m / ${d.Cb}</td></tr>
+</table>
+</div>
+</div>
+
+<h2>Enkesit Süneklik Kontrolü — TBDY 2018 Tablo 9.3</h2>
+<table><thead><tr><th>Enkesit parçası / oran</th><th>Mevcut</th><th>λhd</th><th>λmd</th><th>Sınır</th><th>Durum</th></tr></thead>
+<tbody>${ductRows||'<tr><td colspan="6">—</td></tr>'}</tbody></table>
+${ec3}
+
+<h2>Tasarım İç Kuvvetleri (YDKT)</h2>
+<table class="meta">
+<tr><td>Eksenel Nd</td><td><b>${d.Nd} kN</b> (${d.axType})</td><td>Kesme Vd</td><td><b>${d.Vd} kN</b></td></tr>
+<tr><td>Moment My,d</td><td><b>${d.Myd} kNm</b></td><td>Moment Mz,d</td><td><b>${d.Mzd} kNm</b></td></tr>
+</table>
+
+<h2>Hesaplanan Kapasiteler (φ·R<sub>n</sub>)</h2>
+<table><tbody>${cap}</tbody></table>
+
+<h2>Kullanım Oranları (D/C)</h2>
+<table><thead><tr><th>Kontrol</th><th>D/C</th><th>Oran</th><th>Durum</th></tr></thead>
+<tbody>${dcRows}</tbody></table>
+
+<div class="foot">
+Bu rapor ön tasarım/kontrol amaçlıdır ve nihai proje hesabı yerine geçmez; mühendislik kontrolü gereklidir.
+Kapasite tasarımı, birleşim/panel bölgesi ve yanal mesnet detayları kapsam dışıdır.
+Yöntem: TBDY 2018 Bölüm 9, ÇYTHYE 2018 (YDKT/LRFD, AISC 360/341 uyumlu), TS EN 1993-1-1.
+Oluşturma: ${d.date}.
+</div>
+</body></html>`;
+}
+
+function exportPDF(){
+  const d=buildReportData();
+  if(d.err){alert(d.err);return;}
+  const w=window.open('','_blank');
+  if(!w){alert('Açılır pencere engellendi. Tarayıcı pop-up iznini verin.');return;}
+  w.document.open();w.document.write(buildReportHTML(d));w.document.close();
+  w.focus();
+  setTimeout(()=>{try{w.print();}catch(e){}},400);
+}
+function exportWord(){
+  const d=buildReportData();
+  if(d.err){alert(d.err);return;}
+  const html=buildReportHTML(d);
+  const blob=new Blob(['﻿',html],{type:'application/msword'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const fn=('Celik_Rapor_'+(d.f.name)+'_'+d.date).replace(/[^\wçğıöşüÇĞİÖŞÜ.-]+/g,'_');
+  a.href=url;a.download=fn+'.doc';document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},500);
+}
+document.getElementById('pdfBtn').onclick=exportPDF;
+document.getElementById('wordBtn').onclick=exportWord;
+
 /* -------- başlangıç -------- */
 renderDB();
 updateSel();
 cToggleDims();
 cRenderProps();
+document.getElementById('rpDate').value=new Date().toISOString().slice(0,10);
 // varsayılan seçim: IPE 300
 SEL=DB.IPE.find(p=>p[0]==='IPE 300');SELFAM='IPE';renderDB();updateSel();renderDuct();
 </script>
